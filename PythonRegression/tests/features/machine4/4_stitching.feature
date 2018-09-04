@@ -1,5 +1,5 @@
 Feature: Ensure node reliability while stitching a side tangle 
-	A side tangle transaction needs to be issued to the tangle referencing
+	A stitching tangle transaction needs to be issued to the tangle referencing
 	a transaction from the main tangle, and a transaction from the side tangle
 	and check consistency needs to be called to ensure the transaction does not 
 	crash the node. If the node responds to the api call, it has not crashed. A
