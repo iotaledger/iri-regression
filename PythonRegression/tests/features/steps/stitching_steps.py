@@ -1,5 +1,6 @@
 from aloe import step
 from util.test_logic import api_test_logic
+from util.transaction_utils import transaction_logic
 from iota import ProposedTransaction, Address, Tag, ProposedBundle
 import logging
 
@@ -7,6 +8,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 tests = api_test_logic
+transactions = transaction_logic
 
 config = {}
 responses = {}
@@ -32,14 +34,7 @@ def issue_stitching_transaction(step,node,tag):
     logger.debug('Trunk: ' + str(trunk))
     logger.debug('Branch: ' + str(branch))
     
-    stitching_transaction = ProposedTransaction(
-            address = Address(stitching_addresss),
-            tag = Tag(tag),
-            value = 0
-        )
-    bundle = ProposedBundle()
-    bundle.add_transaction(stitching_transaction)
-    bundle.finalize()
+    bundle = transactions.create_transaction_bundle(stitching_addresss,tag,0)
     
     trytes = bundle[0].as_tryte_string()
 
@@ -82,15 +77,7 @@ def reference_stitch_transaction(step):
     gtta_response = api.get_transactions_to_approve(depth=3)
     branch = gtta_response['branchTransaction']
     
-    txn = ProposedTransaction(
-        address = Address(referencing_address),
-        tag = Tag('REFERENCING9STITCH'),
-        value = 0
-        )    
-    
-    bundle = ProposedBundle()
-    bundle.add_transaction(txn)
-    bundle.finalize()
+    bundle = transactions.create_transaction_bundle(referencing_address,'REFERENCING9STITCH', 0)    
     
     trytes = bundle[0].as_tryte_string()
     
