@@ -2,12 +2,15 @@ from aloe import *
 from iota import Iota,ProposedTransaction,Address,Tag,TryteString,BundleHash
 
 from util import static_vals
+from util.test_logic import api_test_logic
 from time import sleep
 import importlib
 
 import logging 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+tests = api_test_logic
 
 neighbors = static_vals.TEST_NEIGHBORS
 testAddress = static_vals.TEST_ADDRESS
@@ -26,7 +29,7 @@ def api_method_is_called(step,apiCall,nodeName):
     responses[apiCall] = {}
         
      
-    api = prepare_api_call(nodeName)
+    api = tests.prepare_api_call(nodeName)
         
     logger.debug('Assigning call list...')
         
@@ -66,7 +69,7 @@ def spam_call_gtta(step,numTests,node):
     config['apiCall'] = apiCall
     config['nodeId'] = node
     
-    api = prepare_api_call(node)
+    api = tests.prepare_api_call(node)
     logging.info('Calls being made to %s',node)
     responseVal = []
     for i in range(int(numTests)):
@@ -111,7 +114,7 @@ def compare_response(step):
  #Test GetTrytes 
 @step(r'getTrytes is called with the hash ([^"]+)')
 def call_getTrytes(step,hash):
-    api = prepare_api_call(config['nodeId'])
+    api = tests.prepare_api_call(config['nodeId'])
     testHash = getattr(static_vals, hash)
     response = api.get_trytes(testHash)
     logger.debug("Call may not have responded correctly: \n%s",response)
@@ -133,7 +136,7 @@ def check_trytes(step,trytes):
 @step(r'2 neighbors are added with "([^"]*)" on "([^"]*)"')
 def add_neighbors(step,apiCall,nodeName):
     config['nodeId'] = nodeName
-    api = prepare_api_call(nodeName)
+    api = tests.prepare_api_call(nodeName)
     response = api.add_neighbors(neighbors)
     logger.debug('Response: %s',response)
 
@@ -148,7 +151,7 @@ def check_neighbors_post_addition(step):
     
 @step(r'"removeNeighbors" will be called to remove the same neighbors')
 def remove_neighbors(step):
-    api = prepare_api_call(config['nodeId'])
+    api = tests.prepare_api_call(config['nodeId'])
     response = api.remove_neighbors(neighbors)
     logger.debug('Response: %s',response)
     
@@ -172,8 +175,8 @@ def make_neighbors(step,node1,node2):
     hosts = [host1,host2]
     ports = [port1,port2]
     
-    api1 = prepare_api_call(node1)
-    api2 = prepare_api_call(node2)
+    api1 = tests.prepare_api_call(node1)
+    api2 = tests.prepare_api_call(node2)
         
     response1 = api1.get_neighbors()
     response2 = api2.get_neighbors()
@@ -224,7 +227,7 @@ def send_transaction(step,tag,nodeName):
     logger.debug('Preparing Transaction...')
     logger.debug('Node: %s',nodeName)
     config['tag'] = tag
-    api = prepare_api_call(nodeName)  
+    api = tests.prepare_api_call(nodeName)  
     txn = \
         ProposedTransaction(
             address = 
@@ -243,7 +246,7 @@ def send_transaction(step,tag,nodeName):
 @step(r'findTransaction is called with the same tag on "([^"]*)"')
 def find_transaction_is_called(step,nodeName):
     logger.debug(nodeName)
-    api = prepare_api_call(nodeName)    
+    api = tests.prepare_api_call(nodeName)    
     logger.info("Searching for Transaction with the tag: {} on {}".format(config['tag'],nodeName))
     response = api.find_transactions(tags=[config['tag']])    
     config['findTransactionResponse'] = response
@@ -261,19 +264,11 @@ def find_transactions_from_address(step):
     logger.info('Finding milestones')
     node = config('nodeId')       
     
-    api = prepare_api_call(node)
+    api = tests.prepare_api_call(node)
     transactions = api.find_transactions(addresses = [step.multiline])
     responses['findTransactions'] = transactions 
 
   
-                    
-    
-def prepare_api_call(nodeName):
-    host = world.machine['nodes'][nodeName]['host']
-    address ="http://"+ host + ":14265"
-    api = Iota(address)
-    logger.info('API call prepared for %s',address)
-    return api
 
 
 def check_responses_for_call(apiCall):
@@ -297,7 +292,7 @@ def fetch_response(apiCall):
 
 
 def check_neighbors(step):
-    api = prepare_api_call(config['nodeId'])
+    api = tests.prepare_api_call(config['nodeId'])
     response = api.getNeighbors()
     containsNeighbor = [False,False]
     
