@@ -60,9 +60,9 @@ Feature: Test API calls on Machine 1
 		Given "getTransactionsToApprove" is called on "nodeA"
 		Then a response with the following is returned: 
 		|keys								|
-		|trunkTransaction					|
 		|branchTransaction					|
 		|duration							|
+		|trunkTransaction					|
 		
 
 ###

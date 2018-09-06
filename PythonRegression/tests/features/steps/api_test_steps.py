@@ -40,18 +40,12 @@ def api_method_is_called(step,apiCall,nodeName):
         'getTransactionsToApprove': api.get_transactions_to_approve
     }
     
-    if apiCall == 'getNodeInfo':
-        response = api.get_node_info()
+    if apiCall != 'getTransactionsToApprove':
+        response = callList[apiCall]()
         logger.debug('Node Info Response: %s',response)
-    elif apiCall == 'getNeighbors':
-        response = api.get_neighbors()
-        logger.debug('Neighbor Response: %s',response)
-    elif apiCall == 'getTips':
-        response = api.get_tips()
-        logger.debug('Get Tips Response Error')
-    elif apiCall == 'getTransactionsToApprove':
-        response = api.get_transactions_to_approve(3)
-        logger.debug('Get Transactions To Approve Error')
+    elif apiCall == 'getTransactionsToApprove':   
+        response = callList[apiCall](3)
+        logger.debug('Get Transactions To Approve Response: %s',response)
     else:
         response = "Incorrect API call definition"
     
@@ -94,9 +88,8 @@ def compare_response(step):
         responseKeys = list(response.keys())
         responseKeys.sort()
         logger.debug('Response Keys: %s', responseKeys)
-    
         for response_key_val in range(len(response)):
-            assert str(responseKeys[response_key_val]) == str(keys[response_key_val]['keys']), "There was an error with the response" 
+            assert str(responseKeys[response_key_val]) == str(keys[response_key_val]['keys']), "There was an error with the response: {}  {}".format(str(responseKeys[response_key_val]), str(keys[response_key_val]['keys'])) 
     
     elif apiCall == 'getNeighbors' or apiCall == 'getTips':
         responseList = responses[apiCall][nodeId] 
@@ -127,7 +120,7 @@ def check_trytes(step,trytes):
     response = responses['getTrytes'][config['nodeId']]
     testTrytes = getattr(static_vals,trytes)  
     if 'trytes' in response:
-        assert response['trytes'][0] == testTrytes, "Trytes do not match"
+        assert response['trytes'][0] == testTrytes, "Trytes do not match: {}".format(response['trytes'][0])
 
 
 
@@ -167,10 +160,10 @@ def check_neighbors_post_removal(step):
 #Test transactions
 @step(r'"([^"]*)" and "([^"]*)" are neighbors')
 def make_neighbors(step,node1,node2):
-    host1 = world.machine[node1]['host']
-    port1 = world.machine[node1]['udpPort']
-    host2 = world.machine[node2]['host']
-    port2 = world.machine[node2]['udpPort']
+    host1 = world.machine['nodes'][node1]['host']
+    port1 = world.machine['nodes'][node1]['ports']['gossip-udp']
+    host2 = world.machine['nodes'][node2]['host']
+    port2 = world.machine['nodes'][node2]['ports']['gossip-udp']
     
     hosts = [host1,host2]
     ports = [port1,port2]
@@ -184,10 +177,10 @@ def make_neighbors(step,node1,node2):
     neighbors2 = list(response2['neighbors'])
     host = hosts[0]
     port = ports[0]
-    address1 = "udp://" + str(host) + ":" + port     
+    address1 = "udp://" + str(host) + ":" + str(port)     
     host = hosts[1]
     port = ports[1]
-    address2 = "udp://" + str(host) + ":" + port 
+    address2 = "udp://" + str(host) + ":" + str(port) 
     
     logger.debug("Checking if nodes are paired")
     
@@ -258,7 +251,7 @@ def check_transaction_response(step):
     assert len(response['hashes']) != 0, 'Transactions not found'
     logger.info("{} Transactions found".format(len(response['hashes'])))  
                                   
-## Find Transactions
+## Find Transactions with address
 @step(r'find transaction is called with the address:')
 def find_transactions_from_address(step):
     logger.info('Finding milestones')
