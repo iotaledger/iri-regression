@@ -52,13 +52,14 @@ Feature: Test API calls on Machine 2
 		Then the response should be equal to <trytes>
 		
 		Examples:
-			|hash 					| trytes 					| 
-			|static_vals.TEST_HASH	| static_vals.TEST_TRYTES	|
+			|hash 		| trytes 			| 
+			| TEST_HASH	| TEST_TRYTES		|
 		
 	Scenario: GetTransactionsToApprove is called
 		Given "getTransactionsToApprove" is called on "nodeA"
 		Then a response with the following is returned: 
 		|keys								|
-		|trunkTransaction					|
 		|branchTransaction					|
 		|duration							|
+		|trunkTransaction					|
+		
