@@ -1,13 +1,10 @@
 from aloe import step
-from util.test_logic import api_test_logic
-from util.transaction_utils import transaction_logic
-import logging
+from util.test_logic import api_test_logic as tests
+from util.transaction_utils import transaction_logic as transactions
 
+import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-tests = api_test_logic
-transactions = transaction_logic
 
 config = {}
 responses = {}
@@ -26,8 +23,8 @@ def issue_stitching_transaction(step,node,tag):
     side_tangle_transactions = api.find_transactions(addresses = [side_tangle_address])
     gtta_transactions = api.get_transactions_to_approve(depth=3)
 
-    hash_list_length = len(side_tangle_transactions['hashes']) - 1    
-    trunk = side_tangle_transactions['hashes'][hash_list_length]
+    hash_index = len(side_tangle_transactions['hashes']) - 1    
+    trunk = side_tangle_transactions['hashes'][hash_index]
     branch = gtta_transactions['branchTransaction']
     
     logger.debug('Trunk: ' + str(trunk))
@@ -49,8 +46,8 @@ def check_stitch_consistency(step):
     api = tests.prepare_api_call(node)
 
     stitch_transactions = api.find_transactions(tags=[tag]) 
-    hash_list_length = len(stitch_transactions['hashes']) - 1
-    transaction = stitch_transactions['hashes'][hash_list_length]
+    hash_index = len(stitch_transactions['hashes']) - 1
+    transaction = stitch_transactions['hashes'][hash_index]
     response = api.check_consistency(tails=[transaction])
     
     logger.debug('Response: {}'.format(response))
