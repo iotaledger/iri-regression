@@ -1,7 +1,6 @@
 from aloe import step
 from util.test_logic import api_test_logic
 from util.transaction_utils import transaction_logic
-from iota import ProposedTransaction, Address, Tag, ProposedBundle
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -27,8 +26,8 @@ def issue_stitching_transaction(step,node,tag):
     side_tangle_transactions = api.find_transactions(addresses = [side_tangle_address])
     gtta_transactions = api.get_transactions_to_approve(depth=3)
 
-    max = len(side_tangle_transactions['hashes']) - 1    
-    trunk = side_tangle_transactions['hashes'][max]
+    hash_list_length = len(side_tangle_transactions['hashes']) - 1    
+    trunk = side_tangle_transactions['hashes'][hash_list_length]
     branch = gtta_transactions['branchTransaction']
     
     logger.debug('Trunk: ' + str(trunk))
@@ -39,7 +38,7 @@ def issue_stitching_transaction(step,node,tag):
     trytes = bundle[0].as_tryte_string()
 
     sent_transaction = api.attach_to_tangle(trunk, branch, [trytes], 14)
-    transaction = api.broadcast_and_store(sent_transaction.get('trytes'))
+    api.broadcast_and_store(sent_transaction.get('trytes'))
     
 @step(r'check_consistency is called on this transaction')
 def check_stitch_consistency(step):
@@ -50,8 +49,8 @@ def check_stitch_consistency(step):
     api = tests.prepare_api_call(node)
 
     stitch_transactions = api.find_transactions(tags=[tag]) 
-    max = len(stitch_transactions['hashes']) - 1
-    transaction = stitch_transactions['hashes'][max]
+    hash_list_length = len(stitch_transactions['hashes']) - 1
+    transaction = stitch_transactions['hashes'][hash_list_length]
     response = api.check_consistency(tails=[transaction])
     
     logger.debug('Response: {}'.format(response))
