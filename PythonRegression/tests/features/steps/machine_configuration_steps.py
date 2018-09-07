@@ -1,13 +1,17 @@
-from aloe import before,world
+from aloe import before,world, after
 from yaml import load, Loader
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 
 
 config = {}
 
 #Configuration
-@before.all
-def configuration():
+@before.each_feature
+def configuration(feature):
+    logger.info('Configuring machine nodes')
     machine = []   
          
     yamlPath = './output.yml'
@@ -24,4 +28,13 @@ def configuration():
         machine = nodes
           
     world.machine = machine
+    logger.debug('Machine: ')
+    logger.debug(world.machine)
+    
+@after.each_feature
+def deconfiguration(feature):
+    logger.info('Deconstructing machine configuration')
+    world.machine = []
+    logger.debug('Machine: ')
+    logger.debug(world.machine)    
     

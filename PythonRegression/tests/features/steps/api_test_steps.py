@@ -255,7 +255,7 @@ def check_transaction_response(step):
 @step(r'find transaction is called with the address:')
 def find_transactions_from_address(step):
     logger.info('Finding milestones')
-    node = config('nodeId')       
+    node = config['nodeId']       
     
     api = tests.prepare_api_call(node)
     transactions = api.find_transactions(addresses = [step.multiline])
