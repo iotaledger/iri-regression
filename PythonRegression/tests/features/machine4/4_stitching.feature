@@ -38,3 +38,15 @@ Feature: Ensure node reliability while stitching a side tangle
 		|transactionsToRequest				| 
 		
 		
+	@now 	
+	Scenario: Promote stitching transactions
+	
+		Given a stitching transaction is issued on "nodeA" with the tag "PROMOTE9STITCH"
+		When that transaction is promoted on "nodeB" after a delay of 10 seconds
+		And this process is repeated 3 more times		
+		Then the promoted transaction responses should not return an error
+		
+		
+		
+		
+		
