@@ -47,6 +47,8 @@ Feature: Test API calls on Machine 1
 		|duration							|
 
 
+
+    #Values can be found in util/static_vals.py
    	Scenario Outline: GetTrytes is called
 		Given getTrytes is called with the hash <hash>
 		Then the response should be equal to <trytes>
@@ -65,13 +67,24 @@ Feature: Test API calls on Machine 1
 		|trunkTransaction					|
 
 
-    @now
+    #Values can be found in util/static_vals.py
     Scenario: GetInclusionStates is called
 	    Given getInclusionStates is called with the transaction "TEST_HASH" and tips "TEST_TIP_LIST" on "nodeA"
         Then a response with the following is returned:
         |keys                               |
         |duration                           |
         |states                             |
+
+    @now
+    #Address can be found in util/static_vals.py
+    Scenario: GetBalances is called
+        Given "getBalances" is called on "nodeA"
+        Then a response with the following is returned:
+        |keys                               |
+        |balances                           |
+        |duration                           |
+        |milestoneIndex                     |
+        |references                         |
 
 
 ###
