@@ -60,10 +60,10 @@ Feature: Test API calls on Machine 1
 		Given "getTransactionsToApprove" is called on "nodeA"
 		Then a response with the following is returned: 
 		|keys								|
-		|trunkTransaction					|
 		|branchTransaction					|
 		|duration							|
-		
+		|trunkTransaction					|
+
 
 ###
 # To be replaced with a new neighbor test linking nodes within a given topology together 
