@@ -57,7 +57,8 @@ Feature: Test API calls on Machine 1
 			|hash 		| trytes 		    |
 			|TEST_HASH	| TEST_TRYTES	    |
 
-		
+
+
 	Scenario: GetTransactionsToApprove is called
 		Given "getTransactionsToApprove" is called on "nodeA"
 		Then a response with the following is returned: 
@@ -75,7 +76,7 @@ Feature: Test API calls on Machine 1
         |duration                           |
         |states                             |
 
-    @now
+
     #Address can be found in util/static_vals.py
     Scenario: GetBalances is called
         Given "getBalances" is called on "nodeA"
@@ -85,6 +86,14 @@ Feature: Test API calls on Machine 1
         |duration                           |
         |milestoneIndex                     |
         |references                         |
+
+   
+    Scenario: WereAddressesSpentFrom is called
+        Given "wereAddressesSpentFrom" is called on "nodeA"
+    	Then a response with the following is returned:
+    	|keys                               |
+    	|duration                           |
+    	|states                             |
 
 
 ###

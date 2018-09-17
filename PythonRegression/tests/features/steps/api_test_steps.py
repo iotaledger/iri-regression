@@ -36,7 +36,8 @@ def api_method_is_called(step,apiCall,nodeName):
         'getNeighbors': api.get_neighbors,
         'getTips': api.get_tips,
         'getTransactionsToApprove': api.get_transactions_to_approve,
-        'getBalances': api.get_balances
+        'getBalances': api.get_balances,
+        'wereAddressesSpentFrom': api.were_addresses_spent_from
     }
 
     if apiCall == 'getNodeInfo':
@@ -56,6 +57,10 @@ def api_method_is_called(step,apiCall,nodeName):
         address = getattr(static_vals,'TEST_EMPTY_ADDRESS')
         response = api.get_balances(addresses=[address], threshold=100)
         logger.debug('Get Balances')
+    elif apiCall == 'wereAddressesSpentFrom':
+        #Address can be changed in util/static_vals.py
+        address = getattr(static_vals,'TEST_EMPTY_ADDRESS')
+        response = api.were_addresses_spent_from(addresses=[address])
     else:
         response = "Incorrect API call definition"
     
