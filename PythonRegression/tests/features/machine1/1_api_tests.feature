@@ -24,7 +24,7 @@ Feature: Test API calls on Machine 1
 		|time								|
 		|tips								|
 		|transactionsToRequest				|
-	
+
 
 	Scenario: GetNeighbors is called
 		Given "getNeighbors" is called on "nodeA"
@@ -46,15 +46,15 @@ Feature: Test API calls on Machine 1
 		|hashes								|
 		|duration							|
 
-	
-	Scenario Outline: GetTrytes is called 
+
+   	Scenario Outline: GetTrytes is called
 		Given getTrytes is called with the hash <hash>
 		Then the response should be equal to <trytes>
 		
 		Examples:
-			|hash 		| trytes 		| 
-			|TEST_HASH	| TEST_TRYTES	|
-	
+			|hash 		| trytes 		    |
+			|TEST_HASH	| TEST_TRYTES	    |
+
 		
 	Scenario: GetTransactionsToApprove is called
 		Given "getTransactionsToApprove" is called on "nodeA"
@@ -63,6 +63,15 @@ Feature: Test API calls on Machine 1
 		|branchTransaction					|
 		|duration							|
 		|trunkTransaction					|
+
+
+    @now
+    Scenario: GetInclusionStates is called
+	    Given getInclusionStates is called with the transaction "TEST_HASH" and tips "TEST_TIP_LIST" on "nodeA"
+        Then a response with the following is returned:
+        |keys                               |
+        |duration                           |
+        |states                             |
 
 
 ###

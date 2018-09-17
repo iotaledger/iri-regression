@@ -37,7 +37,7 @@ def api_method_is_called(step,apiCall,nodeName):
         'getTips': api.get_tips,
         'getTransactionsToApprove': api.get_transactions_to_approve
     }
-    
+
     if apiCall == 'getNodeInfo':
         response = api.get_node_info()
         logger.debug('Node Info Response: %s',response)
@@ -54,7 +54,7 @@ def api_method_is_called(step,apiCall,nodeName):
         response = "Incorrect API call definition"
     
     
-    assert type(response) is dict, response
+    assert type(response) is dict, 'There may be something wrong with the response format: {}'.format(response)
     
     responses[apiCall] = {}
     responses[apiCall][nodeName] = response
@@ -77,6 +77,24 @@ def spam_call_gtta(step,numTests,node):
         
     responses[apiCall] = {}
     responses[apiCall][node] = responseVal
+
+
+@step(r'getInclusionStates is called with the transaction "([^"]*)" and tips "([^"]*)" on "([^"]*)"')
+def inclusion_state_is_called(step,transaction,tips,node):
+    apiCall = 'getInclusionStates'
+    config['apiCall'] = apiCall
+    config['nodeId'] = node
+
+    api = tests.prepare_api_call(node)
+    transaction_input = getattr(static_vals,transaction)
+    tips_input = getattr(static_vals,tips)
+    response = api.get_inclusion_states(transactions=transaction_input,tips=tips_input)
+    assert type(response) is dict, 'There may be something wrong with the response format: {}'.format(response)
+
+    responses[apiCall] = {}
+    responses[apiCall][node] = response
+
+
 
 ###
 #Response testing    
