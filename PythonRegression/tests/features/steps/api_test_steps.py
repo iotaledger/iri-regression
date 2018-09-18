@@ -27,7 +27,7 @@ def api_method_is_called(step,apiCall,nodeName):
 
     responses[apiCall] = {}
     options = []
-    
+
     api = tests.prepare_api_call(nodeName)
 
     callList = {
@@ -161,39 +161,6 @@ def check_trytes(step,trytes):
         assert response['trytes'][0] == testTrytes, "Trytes do not match"
 
 
-
-###
-#Test Add and Remove Neighbors
-@step(r'2 neighbors are added with "([^"]*)" on "([^"]*)"')
-def add_neighbors(step,apiCall,nodeName):
-    config['nodeId'] = nodeName
-    api = tests.prepare_api_call(nodeName)
-    response = api.add_neighbors(neighbors)
-    logger.debug('Response: %s',response)
-
-
-@step(r'"getNeighbors" is called, it should return the following neighbors:')
-def check_neighbors_post_addition(step):
-    logger.info('Ensuring Neighbors were added correctly')
-    containsNeighbor = check_neighbors(step)
-    assert containsNeighbor[1] is True
-    assert containsNeighbor[0] is True
-
-
-@step(r'"removeNeighbors" will be called to remove the same neighbors')
-def remove_neighbors(step):
-    api = tests.prepare_api_call(config['nodeId'])
-    response = api.remove_neighbors(neighbors)
-    logger.debug('Response: %s',response)
-
-@step(r'"getNeighbors" should not return the following neighbors:')
-def check_neighbors_post_removal(step):
-    logger.info('Ensuring Neighbors were removed correctly')
-    containsNeighbor = check_neighbors(step)
-    assert containsNeighbor[1] is False
-    assert containsNeighbor[0] is False
-
-
 ###
 #Test transactions
 @step(r'"([^"]*)" and "([^"]*)" are neighbors')
@@ -293,7 +260,7 @@ def check_transaction_response(step):
 @step(r'find transaction is called with the address:')
 def find_transactions_from_address(step):
     logger.info('Finding milestones')
-    node = config('nodeId')       
+    node = config['nodeId']
     
     api = tests.prepare_api_call(node)
     transactions = api.find_transactions(addresses = [step.multiline])
