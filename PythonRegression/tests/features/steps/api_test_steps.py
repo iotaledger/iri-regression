@@ -37,6 +37,8 @@ def api_method_is_called(step,apiCall,nodeName):
         'getTips': api.get_tips,
         'getTransactionsToApprove': api.get_transactions_to_approve,
         'getBalances': api.get_balances,
+        'addNeighbors': api.add_neighbors,
+        'removeNeighbors': api.remove_neighbors,
         'wereAddressesSpentFrom': api.were_addresses_spent_from
     }
 
@@ -61,6 +63,15 @@ def api_method_is_called(step,apiCall,nodeName):
         #Address can be changed in util/static_vals.py
         address = getattr(static_vals,'TEST_EMPTY_ADDRESS')
         response = api.were_addresses_spent_from(addresses=[address])
+    elif apiCall == 'addNeighbors' or apiCall == 'removeNeighbors':
+        host = world.machine['nodes']['nodeB']['host']
+        port = world.machine['nodes']['nodeB']['ports']['gossip-udp']
+        node_address = "udp://" + str(host) + ":" + str(port)
+        logger.info(node_address)
+        if apiCall == 'addNeighbors':
+            response = api.add_neighbors(uris=[node_address.decode()])
+        else:
+            response = api.remove_neighbors(uris=[node_address.decode()])
     else:
         response = "Incorrect API call definition"
     
@@ -317,7 +328,7 @@ def fetch_response(apiCall):
 
 
 def check_neighbors(step):
-    api = prepare_api_call(config['nodeId'])
+    api = tests.prepare_api_call(config['nodeId'])
     response = api.getNeighbors()
     containsNeighbor = [False,False]
     

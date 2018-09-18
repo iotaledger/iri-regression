@@ -38,7 +38,22 @@ Feature: Test API calls on Machine 1
 		|numberOfSentTransactions			|
 		|connectionType						|	 
 		
-		
+	Scenario: Add and Remove Neighbors
+	    Adds nodeB as a neighbor to nodeA, and then removes it.
+
+	    Given "addNeighbors" is called on "nodeA"
+	    Then a response with the following is returned:
+	    |keys                               |
+	    |addedNeighbors                     |
+	    |duration                           |
+
+	    When "removeNeighbors" is called on "nodeA"
+	    Then a response with the following is returned:
+	    |keys                               |
+	    |duration                           |
+	    |removedNeighbors                   |
+
+
 	Scenario: GetTips is called
 		Given "getTips" is called on "nodeA"
 		Then a response with the following is returned:
@@ -87,7 +102,7 @@ Feature: Test API calls on Machine 1
         |milestoneIndex                     |
         |references                         |
 
-   
+
     Scenario: WereAddressesSpentFrom is called
         Given "wereAddressesSpentFrom" is called on "nodeA"
     	Then a response with the following is returned:
@@ -96,29 +111,13 @@ Feature: Test API calls on Machine 1
     	|states                             |
 
 
-###
-# To be replaced with a new neighbor test linking nodes within a given topology together 
-### 
-#	@neighbors
-#	Scenario: Add and remove Neighbors
-#		Given 2 neighbors are added with "addNeighbors" on "nodeA"
-#		When "getNeighbors" is called, it should return the following neighbors:
-#			|neighbors 				|
-#			|178.128.236.6:14600 	|
-#			|167.99.178.3:14600		|
-#		Then "removeNeighbors" will be called to remove the same neighbors 
-#		And "getNeighbors" should not return the following neighbors:
-#			|neighbors 				|
-#			|178.128.236.6:14600 	|
-#			|167.99.178.3:14600		|		
 
-	
 	Scenario: Broadcast a test transacion
-		Send a test transaction from one node in a machine, and find that transaction
+		Send a test transaction from one node in a machine with a unique tag, and find that transaction
 		through a different node in the same machine
 		
  		Given "nodeA" and "nodeB" are neighbors
-		When a transaction with the tag "TEST9TRANSACTION" is sent from "nodeA"
+		When a transaction with the tag "TEST9TAG9ONE" is sent from "nodeA"
 		And findTransaction is called with the same tag on "nodeB" 
 		Then the transaction should be found 
 		
