@@ -24,13 +24,12 @@ def api_method_is_called(step,apiCall,nodeName):
     logger.info('%s is called on %s',apiCall,nodeName)
     config['apiCall'] = apiCall
     config['nodeId'] = nodeName
+
     responses[apiCall] = {}
-        
-     
+    options = []
+    
     api = tests.prepare_api_call(nodeName)
-        
-    logger.debug('Assigning call list...')
-        
+
     callList = {
         'getNodeInfo': api.get_node_info,
         'getNeighbors': api.get_neighbors,
@@ -42,40 +41,34 @@ def api_method_is_called(step,apiCall,nodeName):
         'wereAddressesSpentFrom': api.were_addresses_spent_from
     }
 
-    if apiCall == 'getNodeInfo':
-        response = api.get_node_info()
-        logger.debug('Node Info Response: %s',response)
-    elif apiCall == 'getNeighbors':
-        response = api.get_neighbors()
-        logger.debug('Neighbor Response: %s',response)
-    elif apiCall == 'getTips':
-        response = api.get_tips()
-        logger.debug('Get Tips Response Error')
-    elif apiCall == 'getTransactionsToApprove':
-        response = api.get_transactions_to_approve(3)
-        logger.debug('Get Transactions To Approve Error')
+    if apiCall == 'getTransactionsToApprove':
+        options.append(3)
     elif apiCall == 'getBalances':
         #Address can be changed in util/static_vals.py
         address = getattr(static_vals,'TEST_EMPTY_ADDRESS')
-        response = api.get_balances(addresses=[address], threshold=100)
-        logger.debug('Get Balances')
+        options.append([address])
+        options.append(100)
     elif apiCall == 'wereAddressesSpentFrom':
         #Address can be changed in util/static_vals.py
         address = getattr(static_vals,'TEST_EMPTY_ADDRESS')
-        response = api.were_addresses_spent_from(addresses=[address])
+        options.append([address])
     elif apiCall == 'addNeighbors' or apiCall == 'removeNeighbors':
         host = world.machine['nodes']['nodeB']['host']
         port = world.machine['nodes']['nodeB']['ports']['gossip-udp']
         node_address = "udp://" + str(host) + ":" + str(port)
-        logger.info(node_address)
-        if apiCall == 'addNeighbors':
-            response = api.add_neighbors(uris=[node_address.decode()])
-        else:
-            response = api.remove_neighbors(uris=[node_address.decode()])
+        options.append([node_address.decode()])
+
+    logger.info(options)
+
+    if len(options) is 1:
+        response = callList[apiCall](options[0])
+    elif len(options) is 2:
+        response = callList[apiCall](options[0],options[1])
+    elif len(options) is 3:
+        response = callList[apiCall](options[0],options[1],options[2])
     else:
-        response = "Incorrect API call definition"
-    
-    
+        response = callList[apiCall]()
+
     assert type(response) is dict, 'There may be something wrong with the response format: {}'.format(response)
     
     responses[apiCall] = {}
@@ -178,21 +171,21 @@ def add_neighbors(step,apiCall,nodeName):
     response = api.add_neighbors(neighbors)
     logger.debug('Response: %s',response)
 
-    
+
 @step(r'"getNeighbors" is called, it should return the following neighbors:')
 def check_neighbors_post_addition(step):
     logger.info('Ensuring Neighbors were added correctly')
     containsNeighbor = check_neighbors(step)
     assert containsNeighbor[1] is True
-    assert containsNeighbor[0] is True 
-    
-    
+    assert containsNeighbor[0] is True
+
+
 @step(r'"removeNeighbors" will be called to remove the same neighbors')
 def remove_neighbors(step):
     api = tests.prepare_api_call(config['nodeId'])
     response = api.remove_neighbors(neighbors)
     logger.debug('Response: %s',response)
-    
+
 @step(r'"getNeighbors" should not return the following neighbors:')
 def check_neighbors_post_removal(step):
     logger.info('Ensuring Neighbors were removed correctly')
