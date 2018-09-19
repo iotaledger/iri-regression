@@ -1,9 +1,22 @@
 Feature: Test API calls on Machine 1
 	Test various api calls to make sure they are responding
-	correctly 
-	
+	correctly.
+
 	Scenario: GetNodeInfo is called
-		Given "getNodeInfo" is called on "nodeA" 
+
+		#All api calls will be formatted as following, any arguments should be
+		#listed below the call in table format
+		#Example:
+		# "<Api Call name here>" is called on "<insert node name here>" with:
+		#|keys      |values             |type           |
+		#|<arg key> |<arg val>          |<arg type>     |
+		#
+		#See tests/features/steps/api_test_steps.py for further details
+		#
+
+		Given "getNodeInfo" is called on "nodeA" with:
+		|keys       |values                 |type   |
+
 		Then a response with the following is returned:
 		|keys								|
 		|appName							|	
@@ -27,7 +40,9 @@ Feature: Test API calls on Machine 1
 
 
 	Scenario: GetNeighbors is called
-		Given "getNeighbors" is called on "nodeA"
+		Given "getNeighbors" is called on "nodeA" with:
+		|keys       |values                 |type   |
+
 		Then a response with the following is returned:
 		|keys								|
 		|address							|
@@ -41,13 +56,20 @@ Feature: Test API calls on Machine 1
 	Scenario: Add and Remove Neighbors
 	    Adds nodeB as a neighbor to nodeA, and then removes it.
 
-	    Given "addNeighbors" is called on "nodeA"
+	    Given "addNeighbors" is called on "nodeA" with:
+	    |keys       |values                 |type           |
+        |uris       |nodeB                  |nodeAddress    |
+
 	    Then a response with the following is returned:
 	    |keys                               |
 	    |addedNeighbors                     |
 	    |duration                           |
 
-	    When "removeNeighbors" is called on "nodeA"
+	    When "removeNeighbors" is called on "nodeA" with:
+        |keys       |values                 |type           |
+        |uris       |nodeB                  |nodeAddress    |
+
+
 	    Then a response with the following is returned:
 	    |keys                               |
 	    |duration                           |
@@ -55,7 +77,9 @@ Feature: Test API calls on Machine 1
 
 
 	Scenario: GetTips is called
-		Given "getTips" is called on "nodeA"
+		Given "getTips" is called on "nodeA" with:
+		|keys       |values                 |type           |
+
 		Then a response with the following is returned:
 		|keys 								|
 		|hashes								|
@@ -75,7 +99,10 @@ Feature: Test API calls on Machine 1
 
 
 	Scenario: GetTransactionsToApprove is called
-		Given "getTransactionsToApprove" is called on "nodeA"
+		Given "getTransactionsToApprove" is called on "nodeA" with:
+		|keys       |values                 |type           |
+        |depth      |3                      |int            |
+
 		Then a response with the following is returned: 
 		|keys								|
 		|branchTransaction					|
@@ -94,7 +121,12 @@ Feature: Test API calls on Machine 1
 
     #Address can be found in util/static_vals.py
     Scenario: GetBalances is called
-        Given "getBalances" is called on "nodeA"
+        Given "getBalances" is called on "nodeA" with:
+        |keys       |values                 |type               |
+        |addresses  |TEST_EMPTY_ADDRESS     |staticAddress      |
+        |threshold  |100                    |int                |
+
+
         Then a response with the following is returned:
         |keys                               |
         |balances                           |
@@ -104,7 +136,10 @@ Feature: Test API calls on Machine 1
 
 
     Scenario: WereAddressesSpentFrom is called
-        Given "wereAddressesSpentFrom" is called on "nodeA"
+        Given "wereAddressesSpentFrom" is called on "nodeA" with:
+        |keys       |values                 |type               |
+        |addresses  |TEST_EMPTY_ADDRESS     |staticAddress      |
+
     	Then a response with the following is returned:
     	|keys                               |
     	|duration                           |

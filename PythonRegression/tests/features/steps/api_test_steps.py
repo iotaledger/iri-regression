@@ -17,16 +17,56 @@ config = {}
 responses = {'getNodeInfo':{},'getNeighbors':{},'getTips':{},'getTransactionsToApprove': {},'getTrytes':{}}   
 
 
+
 ###
 #Register API call    
-@step(r'"([^"]*)" is called on "([^"]*)"')
+'''
+This is the general api calling function. There are 3 inputs
+
+@param apiCAll:     The api call that will be requested
+@param nodeName:    The name identifying the node you would like to make this request on
+@param table:       A gherkin table outlining any arguments needed for the call
+                    (See tests/features/machine1/1_api+tests.feature for examples) 
+
+    The table parameter is unique in that there are several input types available depending on the call
+    being made. 
+    Types:
+        string:         Basic string argument, will be taken as is
+        int:            Basic integer argument, will be converted to int before call is made
+        nodeAddress:    Node name identifier, will create address from node configuration 
+        staticAddress:  Static name identifier, will fetch address from util/static_vals.py 
+ 
+'''
+@step(r'"([^"]*)" is called on "([^"]*)" with:')
 def api_method_is_called(step,apiCall,nodeName):
     logger.info('%s is called on %s',apiCall,nodeName)
     config['apiCall'] = apiCall
     config['nodeId'] = nodeName
+    arg_list = step.hashes
+
+    options = {}
+
+    for x in range(len(arg_list)):
+        if len(arg_list) != 0:
+            key = arg_list[x]['keys']
+            value = arg_list[x]['values']
+
+            if arg_list[x]['type'] == "int":
+                value = int(value)
+            elif arg_list[x]['type'] == "nodeAddress":
+                host = world.machine['nodes'][value]['host']
+                port = world.machine['nodes'][value]['ports']['gossip-udp']
+                address = "udp://" + host + ":" + str(port)
+                value = [address.decode()]
+            elif arg_list[x]['type'] == "staticAddress":
+                address = getattr(static_vals,value)
+                value = [address]
+
+            options[key] = value
+
+    logger.info(options)
 
     responses[apiCall] = {}
-    options = []
 
     api = tests.prepare_api_call(nodeName)
 
@@ -41,33 +81,7 @@ def api_method_is_called(step,apiCall,nodeName):
         'wereAddressesSpentFrom': api.were_addresses_spent_from
     }
 
-    if apiCall == 'getTransactionsToApprove':
-        options.append(3)
-    elif apiCall == 'getBalances':
-        #Address can be changed in util/static_vals.py
-        address = getattr(static_vals,'TEST_EMPTY_ADDRESS')
-        options.append([address])
-        options.append(100)
-    elif apiCall == 'wereAddressesSpentFrom':
-        #Address can be changed in util/static_vals.py
-        address = getattr(static_vals,'TEST_EMPTY_ADDRESS')
-        options.append([address])
-    elif apiCall == 'addNeighbors' or apiCall == 'removeNeighbors':
-        host = world.machine['nodes']['nodeB']['host']
-        port = world.machine['nodes']['nodeB']['ports']['gossip-udp']
-        node_address = "udp://" + str(host) + ":" + str(port)
-        options.append([node_address.decode()])
-
-    logger.info(options)
-
-    if len(options) is 1:
-        response = callList[apiCall](options[0])
-    elif len(options) is 2:
-        response = callList[apiCall](options[0],options[1])
-    elif len(options) is 3:
-        response = callList[apiCall](options[0],options[1],options[2])
-    else:
-        response = callList[apiCall]()
+    response = callList[apiCall](**options)
 
     assert type(response) is dict, 'There may be something wrong with the response format: {}'.format(response)
     
