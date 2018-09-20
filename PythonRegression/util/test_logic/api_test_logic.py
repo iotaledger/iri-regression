@@ -73,11 +73,10 @@ def prepare_options(args,optionList):
                 address = "udp://" + host + ":" + str(port)
                 value = [address.decode()]
             elif arg_type == "staticValue":
+                value = getattr(static_vals,value)
+            elif arg_type == "staticList":
                 address = getattr(static_vals,value)
-                if type(address) is list:
-                    value = address
-                else:
-                    value = [address]
+                value = [address]
 
             optionList[key] = value
 

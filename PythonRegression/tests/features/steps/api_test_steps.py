@@ -1,5 +1,5 @@
 from aloe import *
-from iota import Iota,ProposedTransaction,Address,Tag,TryteString,BundleHash
+from iota import Iota,ProposedTransaction,Address,Tag,TryteString,ProposedBundle
 
 from util import static_vals
 from util.test_logic import api_test_logic as tests
@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 neighbors = static_vals.TEST_NEIGHBORS
 testAddress = static_vals.TEST_ADDRESS
+
+localVar = "TESTINGLOCALVARIABLESAAAAAAAAAAAAAAAAAAAAAAAAAAH"
 
 config = {}
 responses = {'getNodeInfo':{},'getNeighbors':{},'getTips':{},'getTransactionsToApprove': {},'getTrytes':{}}   
@@ -59,7 +61,11 @@ def api_method_is_called(step,apiCall,nodeName):
         'addNeighbors': api.add_neighbors,
         'removeNeighbors': api.remove_neighbors,
         'wereAddressesSpentFrom': api.were_addresses_spent_from,
-        'getInclusionStates': api.get_inclusion_states
+        'getInclusionStates': api.get_inclusion_states,
+        'storeTransactions': api.store_transactions,
+        'broadcastTransactions': api.broadcast_transactions,
+        'findTransactions': api.find_transactions,
+        'attachToTangle': api.attach_to_tangle
     }
 
     response = callList[apiCall](**options)
@@ -87,6 +93,38 @@ def spam_call_gtta(step,numTests,node):
         
     responses[apiCall] = {}
     responses[apiCall][node] = responseVal
+
+
+###
+#Transaction Generator
+#TODO: Merge Transaction Logic commit to modularise bundle generation
+@step(r'a transaction is generated and attached on "([^"]*)" with:')
+def generate_transaction_and_attach(step,node):
+    arg_list = step.hashes
+    config['nodeId'] = node
+    config['apiCall'] = 'attachToTangle'
+    options = {}
+    api = tests.prepare_api_call(node)
+
+    tests.prepare_options(arg_list,options)
+    addresses = options.get('address')
+    value = options.get('value')
+
+    transaction = ProposedTransaction(address=Address(addresses[0]), value = value)
+
+    bundle = ProposedBundle()
+    bundle.add_transaction(transaction)
+    bundle.finalize()
+    trytes = str(bundle[0].as_tryte_string())
+
+    gtta = api.get_transactions_to_approve(depth=3)
+    branch = str(gtta['branchTransaction'])
+    trunk = str(gtta['trunkTransaction'])
+
+    sent = api.attach_to_tangle(trunk,branch,[trytes],9)
+    logger.info('Transaction Sent')
+
+    setattr(static_vals, "TEST_STORE_TRANSACTION", sent.get('trytes'))
 
 
 

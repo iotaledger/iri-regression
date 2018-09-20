@@ -151,6 +151,34 @@ Feature: Test API calls on Machine 1
 
 
 
+    @now
+    Scenario: Create, attach, store and find a transaction
+        Generate a transaction, attach it to the tangle, and store it locally. Then find
+        that transaction via its address.
+
+        Given a transaction is generated and attached on "nodeA" with:
+        |keys       |values                 |type           |
+        |address    |TEST_STORE_ADDRESS     |staticValue    |
+        |value      |0                      |int            |
+
+        Then a response with the following is returned:
+        |keys                               |
+        |trytes                             |
+
+        When "storeTransactions" is called on "nodeA" with:
+        |keys       |values                 |type           |
+        |trytes     |TEST_STORE_TRANSACTION |staticValue    |
+
+        And "findTransactions" is called on "nodeA" with:
+        |keys       |values                 |type           |
+        |addresses  |TEST_STORE_ADDRESS     |staticList     |
+
+        Then a response with the following is returned:
+        |keys                               |
+        |hashes                             |
+
+
+
 	Scenario: Broadcast a test transacion
 		Send a test transaction from one node in a machine with a unique tag, and find that transaction
 		through a different node in the same machine
@@ -159,4 +187,4 @@ Feature: Test API calls on Machine 1
 		When a transaction with the tag "TEST9TAG9ONE" is sent from "nodeA"
 		And findTransaction is called with the same tag on "nodeB" 
 		Then the transaction should be found 
-		
+
