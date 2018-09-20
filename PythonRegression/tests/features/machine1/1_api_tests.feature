@@ -112,7 +112,11 @@ Feature: Test API calls on Machine 1
 
     #Values can be found in util/static_vals.py
     Scenario: GetInclusionStates is called
-	    Given getInclusionStates is called with the transaction "TEST_HASH" and tips "TEST_TIP_LIST" on "nodeA"
+	    Given "getInclusionStates" is called on "nodeA" with:
+        |keys           |values             |type               |
+        |transactions   |TEST_HASH          |staticValue        |
+        |tips           |TEST_TIP_LIST      |staticValue        |
+
         Then a response with the following is returned:
         |keys                               |
         |duration                           |
@@ -123,7 +127,7 @@ Feature: Test API calls on Machine 1
     Scenario: GetBalances is called
         Given "getBalances" is called on "nodeA" with:
         |keys       |values                 |type               |
-        |addresses  |TEST_EMPTY_ADDRESS     |staticAddress      |
+        |addresses  |TEST_EMPTY_ADDRESS     |staticValue        |
         |threshold  |100                    |int                |
 
 
@@ -138,7 +142,7 @@ Feature: Test API calls on Machine 1
     Scenario: WereAddressesSpentFrom is called
         Given "wereAddressesSpentFrom" is called on "nodeA" with:
         |keys       |values                 |type               |
-        |addresses  |TEST_EMPTY_ADDRESS     |staticAddress      |
+        |addresses  |TEST_EMPTY_ADDRESS     |staticValue        |
 
     	Then a response with the following is returned:
     	|keys                               |

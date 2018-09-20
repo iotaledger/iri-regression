@@ -34,7 +34,7 @@ This is the general api calling function. There are 3 inputs
         string:         Basic string argument, will be taken as is
         int:            Basic integer argument, will be converted to int before call is made
         nodeAddress:    Node name identifier, will create address from node configuration 
-        staticAddress:  Static name identifier, will fetch address from util/static_vals.py 
+        staticValue:    Static name identifier, will fetch value from util/static_vals.py 
  
 '''
 @step(r'"([^"]*)" is called on "([^"]*)" with:')
@@ -50,17 +50,22 @@ def api_method_is_called(step,apiCall,nodeName):
         if len(arg_list) != 0:
             key = arg_list[x]['keys']
             value = arg_list[x]['values']
+            arg_type = arg_list[x]['type']
 
-            if arg_list[x]['type'] == "int":
+            #TODO: create util functions for the following
+            if arg_type == "int":
                 value = int(value)
-            elif arg_list[x]['type'] == "nodeAddress":
+            elif arg_type == "nodeAddress":
                 host = world.machine['nodes'][value]['host']
                 port = world.machine['nodes'][value]['ports']['gossip-udp']
                 address = "udp://" + host + ":" + str(port)
                 value = [address.decode()]
-            elif arg_list[x]['type'] == "staticAddress":
+            elif arg_type == "staticValue":
                 address = getattr(static_vals,value)
-                value = [address]
+                if type(address) is list:
+                    value = address
+                else:
+                    value = [address]
 
             options[key] = value
 
@@ -78,7 +83,8 @@ def api_method_is_called(step,apiCall,nodeName):
         'getBalances': api.get_balances,
         'addNeighbors': api.add_neighbors,
         'removeNeighbors': api.remove_neighbors,
-        'wereAddressesSpentFrom': api.were_addresses_spent_from
+        'wereAddressesSpentFrom': api.were_addresses_spent_from,
+        'getInclusionStates': api.get_inclusion_states
     }
 
     response = callList[apiCall](**options)
@@ -106,22 +112,6 @@ def spam_call_gtta(step,numTests,node):
         
     responses[apiCall] = {}
     responses[apiCall][node] = responseVal
-
-
-@step(r'getInclusionStates is called with the transaction "([^"]*)" and tips "([^"]*)" on "([^"]*)"')
-def inclusion_state_is_called(step,transaction,tips,node):
-    apiCall = 'getInclusionStates'
-    config['apiCall'] = apiCall
-    config['nodeId'] = node
-
-    api = tests.prepare_api_call(node)
-    transaction_input = getattr(static_vals,transaction)
-    tips_input = getattr(static_vals,tips)
-    response = api.get_inclusion_states(transactions=transaction_input,tips=tips_input)
-    assert type(response) is dict, 'There may be something wrong with the response format: {}'.format(response)
-
-    responses[apiCall] = {}
-    responses[apiCall][node] = response
 
 
 
