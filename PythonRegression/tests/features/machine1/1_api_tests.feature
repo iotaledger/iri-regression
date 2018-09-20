@@ -110,6 +110,18 @@ Feature: Test API calls on Machine 1
 		|trunkTransaction					|
 
 
+    Scenario: CheckConsistency is called
+        Given "checkConsistency" is called on "nodeA" with:
+        |keys           |values             |type               |
+        |tails          |CONSISTENCY_HASH   |staticValue        |
+
+        Then a response with the following is returned:
+        |keys                               |
+        |duration                           |
+        |info                               |
+        |state                              |
+
+
     #Values can be found in util/static_vals.py
     Scenario: GetInclusionStates is called
 	    Given "getInclusionStates" is called on "nodeA" with:

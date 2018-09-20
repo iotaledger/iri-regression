@@ -66,7 +66,8 @@ def api_method_is_called(step,apiCall,nodeName):
         'storeTransactions': api.store_transactions,
         'broadcastTransactions': api.broadcast_transactions,
         'findTransactions': api.find_transactions,
-        'attachToTangle': api.attach_to_tangle
+        'attachToTangle': api.attach_to_tangle,
+        'checkConsistency': api.check_consistency
     }
 
     response = callList[apiCall](**options)
