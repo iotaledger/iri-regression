@@ -37,6 +37,7 @@ This is the general api calling function. There are 3 inputs
         int:            Basic integer argument, will be converted to int before call is made
         nodeAddress:    Node name identifier, will create address from node configuration 
         staticValue:    Static name identifier, will fetch value from util/static_vals.py 
+        staticList:     Same as staticValue, except it places the results into a list 
  
 '''
 @step(r'"([^"]*)" is called on "([^"]*)" with:')

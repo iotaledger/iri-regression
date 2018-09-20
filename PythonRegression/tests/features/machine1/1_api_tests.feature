@@ -127,7 +127,7 @@ Feature: Test API calls on Machine 1
     Scenario: GetBalances is called
         Given "getBalances" is called on "nodeA" with:
         |keys       |values                 |type               |
-        |addresses  |TEST_EMPTY_ADDRESS     |staticValue        |
+        |addresses  |TEST_EMPTY_ADDRESS     |staticList         |
         |threshold  |100                    |int                |
 
 
@@ -142,7 +142,7 @@ Feature: Test API calls on Machine 1
     Scenario: WereAddressesSpentFrom is called
         Given "wereAddressesSpentFrom" is called on "nodeA" with:
         |keys       |values                 |type               |
-        |addresses  |TEST_EMPTY_ADDRESS     |staticValue        |
+        |addresses  |TEST_EMPTY_ADDRESS     |staticList         |
 
     	Then a response with the following is returned:
     	|keys                               |
