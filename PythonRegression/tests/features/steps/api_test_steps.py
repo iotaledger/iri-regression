@@ -45,32 +45,7 @@ def api_method_is_called(step,apiCall,nodeName):
     arg_list = step.hashes
 
     options = {}
-
-    for x in range(len(arg_list)):
-        if len(arg_list) != 0:
-            key = arg_list[x]['keys']
-            value = arg_list[x]['values']
-            arg_type = arg_list[x]['type']
-
-            #TODO: create util functions for the following
-            if arg_type == "int":
-                value = int(value)
-            elif arg_type == "nodeAddress":
-                host = world.machine['nodes'][value]['host']
-                port = world.machine['nodes'][value]['ports']['gossip-udp']
-                address = "udp://" + host + ":" + str(port)
-                value = [address.decode()]
-            elif arg_type == "staticValue":
-                address = getattr(static_vals,value)
-                if type(address) is list:
-                    value = address
-                else:
-                    value = [address]
-
-            options[key] = value
-
-    logger.info(options)
-
+    tests.prepare_options(arg_list,options)
     responses[apiCall] = {}
 
     api = tests.prepare_api_call(nodeName)

@@ -1,5 +1,6 @@
 from aloe import world
 from iota import Iota
+from util import static_vals
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -55,4 +56,28 @@ def check_neighbors(step,node):
 def import_steps():
     import tests.features.steps.api_test_steps as steps
     return steps
-     
+
+
+def prepare_options(args,optionList):
+    for x in range(len(args)):
+        if len(args) != 0:
+            key = args[x]['keys']
+            value = args[x]['values']
+            arg_type = args[x]['type']
+
+            if arg_type == "int":
+                value = int(value)
+            elif arg_type == "nodeAddress":
+                host = world.machine['nodes'][value]['host']
+                port = world.machine['nodes'][value]['ports']['gossip-udp']
+                address = "udp://" + host + ":" + str(port)
+                value = [address.decode()]
+            elif arg_type == "staticValue":
+                address = getattr(static_vals,value)
+                if type(address) is list:
+                    value = address
+                else:
+                    value = [address]
+
+            optionList[key] = value
+
