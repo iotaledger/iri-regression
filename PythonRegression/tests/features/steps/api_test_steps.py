@@ -83,7 +83,6 @@ def threaded_call(step,apiCall,node):
     if 'threads' not in config:
         config['threads'] = {}
     config['threads'][apiCall] = new_thread
-    logger.info(threading.active_count())
     #Wait 3 seconds to give node time to respond
     sleep(3)
 
@@ -91,12 +90,10 @@ def threaded_call(step,apiCall,node):
 @step(r'all api call threads are joined')
 def join_threads(step):
     logger.info('Joining threads')
-    logger.info(config['threads'])
     for thread in config['threads']:
         current_thread = config['threads'][thread]
         logger.info('Joining current thread: {}'.format(current_thread.name))
         current_thread.join(5)
-        logger.info('Post Join')
         if current_thread.is_alive():
             logger.info('Thread is still alive'.format(current_thread.name))
         else:
@@ -107,10 +104,8 @@ def join_threads(step):
 def check_thread_count(step,numThreads):
     logger.info("Checking threads")
     threads_found = threading.active_count()
-    logger.info(threads_found)
-    logger.info(type(threads_found))
-    logger.info("{} threads found".format(threads_found))
     assert threads_found == int(numThreads), "{} threads were found, expected {}".format(threads_found,numThreads)
+    logger.info("No additional threads running")
 
 
 @step(r'GTTA is called (\d+) times on "([^"]*)"')

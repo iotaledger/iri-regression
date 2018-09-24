@@ -126,7 +126,7 @@ Feature: Test API calls on Machine 1
     Scenario: GetInclusionStates is called
 	    Given "getInclusionStates" is called on "nodeA" with:
         |keys           |values             |type               |
-        |transactions   |TEST_HASH          |staticValue        |
+        |transactions   |TEST_HASH          |staticList         |
         |tips           |TEST_TIP_LIST      |staticValue        |
 
         Then a response with the following is returned:
