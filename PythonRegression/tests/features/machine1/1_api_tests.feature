@@ -112,8 +112,8 @@ Feature: Test API calls on Machine 1
 
     Scenario: CheckConsistency is called
         Given "checkConsistency" is called on "nodeA" with:
-        |keys           |values             |type               |
-        |tails          |CONSISTENCY_HASH   |staticValue        |
+        |keys           |values             |type           |
+        |tails          |TEST_HASH          |staticList     |
 
         Then a response with the following is returned:
         |keys                               |
@@ -151,6 +151,26 @@ Feature: Test API calls on Machine 1
         |references                         |
 
 
+    Scenario: Interrupt attach to tangle
+        Given "attachToTangle" is called on one thread in "nodeA" with:
+        |keys                   |values                         |type           |
+        |trytes                 |EMPTY_TRANSACTION_TRYTES       |staticList     |
+        |trunk_transaction      |TEST_HASH                      |staticValue    |
+        |branch_transaction     |TEST_HASH                      |staticValue    |
+        |min_weight_magnitude   |50                             |int            |
+
+        And "interruptAttachingToTangle" is called on one thread in "nodeA" with:
+        |keys                   |values                         |type           |
+
+        When all api call threads are joined
+        #The only active thread should be the main testing thread
+        Then while checking for running threads, there should be "1" running
+
+
+
+
+
+
     Scenario: WereAddressesSpentFrom is called
         Given "wereAddressesSpentFrom" is called on "nodeA" with:
         |keys       |values                 |type               |
@@ -163,7 +183,6 @@ Feature: Test API calls on Machine 1
 
 
 
-    @now
     Scenario: Create, attach, store and find a transaction
         Generate a transaction, attach it to the tangle, and store it locally. Then find
         that transaction via its address.
@@ -188,6 +207,11 @@ Feature: Test API calls on Machine 1
         Then a response with the following is returned:
         |keys                               |
         |hashes                             |
+
+
+
+
+
 
 
 

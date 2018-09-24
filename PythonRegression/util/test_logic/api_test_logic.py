@@ -80,3 +80,26 @@ def prepare_options(args,optionList):
 
             optionList[key] = value
 
+def fetch_call(apiCall,api,options):
+    callList = {
+        'getNodeInfo': api.get_node_info,
+        'getNeighbors': api.get_neighbors,
+        'getTips': api.get_tips,
+        'getTransactionsToApprove': api.get_transactions_to_approve,
+        'getBalances': api.get_balances,
+        'addNeighbors': api.add_neighbors,
+        'removeNeighbors': api.remove_neighbors,
+        'wereAddressesSpentFrom': api.were_addresses_spent_from,
+        'getInclusionStates': api.get_inclusion_states,
+        'storeTransactions': api.store_transactions,
+        'broadcastTransactions': api.broadcast_transactions,
+        'findTransactions': api.find_transactions,
+        'attachToTangle': api.attach_to_tangle,
+        'checkConsistency': api.check_consistency,
+        'interruptAttachingToTangle': api.interrupt_attaching_to_tangle,
+    }
+
+    response = callList[apiCall](**options)
+
+    return response
+

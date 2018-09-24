@@ -4,6 +4,7 @@ from iota import Iota,ProposedTransaction,Address,Tag,TryteString,ProposedBundle
 from util import static_vals
 from util.test_logic import api_test_logic as tests
 from time import sleep
+import threading
 import importlib
 
 import logging 
@@ -52,31 +53,64 @@ def api_method_is_called(step,apiCall,nodeName):
     responses[apiCall] = {}
 
     api = tests.prepare_api_call(nodeName)
-
-    callList = {
-        'getNodeInfo': api.get_node_info,
-        'getNeighbors': api.get_neighbors,
-        'getTips': api.get_tips,
-        'getTransactionsToApprove': api.get_transactions_to_approve,
-        'getBalances': api.get_balances,
-        'addNeighbors': api.add_neighbors,
-        'removeNeighbors': api.remove_neighbors,
-        'wereAddressesSpentFrom': api.were_addresses_spent_from,
-        'getInclusionStates': api.get_inclusion_states,
-        'storeTransactions': api.store_transactions,
-        'broadcastTransactions': api.broadcast_transactions,
-        'findTransactions': api.find_transactions,
-        'attachToTangle': api.attach_to_tangle,
-        'checkConsistency': api.check_consistency
-    }
-
-    response = callList[apiCall](**options)
+    response = tests.fetch_call(apiCall,api,options)
 
     assert type(response) is dict, 'There may be something wrong with the response format: {}'.format(response)
     
     responses[apiCall] = {}
     responses[apiCall][nodeName] = response
 
+#This method is identical to the method above, but creates a new thread
+#TODO: Find a way to pass aloe.world variable between threads to eliminate need for duplicate code
+@step(r'"([^"]*)" is called on one thread in "([^"]*)" with:')
+def threaded_call(step,apiCall,node):
+    logger.info("Creating thread for {}".format(apiCall))
+    config['apiCall'] = apiCall
+    config['nodeId'] = node
+    arg_list = step.hashes
+
+    options = {}
+    tests.prepare_options(arg_list,options)
+    api = tests.prepare_api_call(node)
+
+    def make_call(api,options):
+        return tests.fetch_call(apiCall,api,options)
+
+    new_thread = threading.Thread(target=make_call, args=(api,options))
+    new_thread.setDaemon(True)
+    new_thread.start()
+
+    if 'threads' not in config:
+        config['threads'] = {}
+    config['threads'][apiCall] = new_thread
+    logger.info(threading.active_count())
+    #Wait 3 seconds to give node time to respond
+    sleep(3)
+
+
+@step(r'all api call threads are joined')
+def join_threads(step):
+    logger.info('Joining threads')
+    logger.info(config['threads'])
+    for thread in config['threads']:
+        current_thread = config['threads'][thread]
+        logger.info('Joining current thread: {}'.format(current_thread.name))
+        current_thread.join(5)
+        logger.info('Post Join')
+        if current_thread.is_alive():
+            logger.info('Thread is still alive'.format(current_thread.name))
+        else:
+            logger.info("Thread is dead")
+
+
+@step(r'while checking for running threads, there should be "(\d+)" running')
+def check_thread_count(step,numThreads):
+    logger.info("Checking threads")
+    threads_found = threading.active_count()
+    logger.info(threads_found)
+    logger.info(type(threads_found))
+    logger.info("{} threads found".format(threads_found))
+    assert threads_found == int(numThreads), "{} threads were found, expected {}".format(threads_found,numThreads)
 
 
 @step(r'GTTA is called (\d+) times on "([^"]*)"')
@@ -166,7 +200,7 @@ def compare_response(step):
 def call_getTrytes(step,hash):
     api = tests.prepare_api_call(config['nodeId'])
     testHash = getattr(static_vals, hash)
-    response = api.get_trytes(testHash)
+    response = api.get_trytes([testHash])
     logger.debug("Call may not have responded correctly: \n%s",response)
     assert type(response) is dict
     responses['getTrytes'][config['nodeId']] = response
