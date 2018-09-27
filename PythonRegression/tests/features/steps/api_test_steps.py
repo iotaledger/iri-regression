@@ -213,10 +213,10 @@ def check_trytes(step,trytes):
 #Test transactions
 @step(r'"([^"]*)" and "([^"]*)" are neighbors')
 def make_neighbors(step,node1,node2):
-    host1 = world.machine['nodes'][node1]['host']
-    port1 = world.machine['nodes'][node1]['ports']['gossip-udp']
-    host2 = world.machine['nodes'][node2]['host']
-    port2 = world.machine['nodes'][node2]['ports']['gossip-udp']
+    host1 = world.machine['nodes'][node1]['podip']
+    port1 = world.machine['nodes'][node1]['clusterip_ports']['gossip-udp']
+    host2 = world.machine['nodes'][node2]['podip']
+    port2 = world.machine['nodes'][node2]['clusterip_ports']['gossip-udp']
     
     hosts = [host1,host2]
     ports = [port1,port2]
