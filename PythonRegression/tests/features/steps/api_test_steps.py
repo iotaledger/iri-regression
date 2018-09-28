@@ -384,7 +384,15 @@ def fetch_config(key):
 def fetch_response(apiCall):
     return responses[apiCall]
 
+'''
+This method is used to determine if a node contains the neighbors specified in the steps feature list
 
+@returns a list of two bools 
+
+If the return contains a False response, then the neighbor associated with that bool will be added in the remaining
+methods in the step.  
+'''
+#TODO: Move this function to a utility file along with all other functionality involving neighbors
 def check_neighbors(step):
     api = api_utils.prepare_api_call(config['nodeId'])
     response = api.getNeighbors()
