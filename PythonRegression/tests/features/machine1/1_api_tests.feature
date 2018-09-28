@@ -111,7 +111,7 @@ Feature: Test API calls on Machine 1
 		|duration					|
 		|trunkTransaction				|
 
-    @now
+
 	Scenario: CheckConsistency is called
 		Given "checkConsistency" is called on "nodeA" with:
 		|keys           |values				|type           |
@@ -133,7 +133,6 @@ Feature: Test API calls on Machine 1
 
 
 
-
 	#Values can be found in util/static_vals.py
 	Scenario: GetInclusionStates is called
 		Given "getInclusionStates" is called on "nodeA" with:
@@ -141,10 +140,9 @@ Feature: Test API calls on Machine 1
 		|transactions   |TEST_HASH			|staticList         |
 		|tips           |TEST_TIP_LIST			|staticValue        |
 
-		Then a response with the following is returned:
-		|keys						|
-		|duration					|
-		|states						|
+		Then the response for "getInclusionStates" should return with:
+		|keys			|values			|type               |
+		|states			|[False]		|string             |
 
 
 	#Address can be found in util/static_vals.py

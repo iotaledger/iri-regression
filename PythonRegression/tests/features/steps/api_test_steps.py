@@ -48,8 +48,6 @@ def api_method_is_called(step,apiCall,nodeName):
     api_utils.prepare_options(arg_list, options)
     responses[apiCall] = {}
 
-    logger.info(options)
-
     api = api_utils.prepare_api_call(nodeName)
     response = api_utils.fetch_call(apiCall, api, options)
 
@@ -170,7 +168,6 @@ def generate_transaction_and_attach(step,node):
 @step(r'the response for "([^"]*)" should return with:')
 def check_response_for_value(step,apiCall):
     response_values = responses[apiCall][config['nodeId']]
-    logger.info(response_values)
 
     expected_values = {}
     args = step.hashes
@@ -184,6 +181,7 @@ def check_response_for_value(step,apiCall):
             assert str(expected_value) == str(response_value), \
                 "The expected value {} does not match the response value: {}".format(expected_value,response_value)
 
+    logger.info('Response contained expected values')
 
 
 
