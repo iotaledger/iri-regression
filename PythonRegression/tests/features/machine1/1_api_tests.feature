@@ -52,7 +52,8 @@ Feature: Test API calls on Machine 1
 		|numberOfInvalidTransactions			|
 		|numberOfSentTransactions			|
 		|connectionType					|
-		
+
+
 	Scenario: Add and Remove Neighbors
 		Adds nodeB as a neighbor to nodeA, and then removes it.
 
@@ -62,8 +63,9 @@ Feature: Test API calls on Machine 1
 
 		Then a response with the following is returned:
 		|keys						|
-		|addedNeighbors					|
+		|addedNeighbors                                 |
 		|duration					|
+
 
 		When "removeNeighbors" is called on "nodeA" with:
 		|keys       |values				|type           |
@@ -109,17 +111,27 @@ Feature: Test API calls on Machine 1
 		|duration					|
 		|trunkTransaction				|
 
-
+    @now
 	Scenario: CheckConsistency is called
 		Given "checkConsistency" is called on "nodeA" with:
 		|keys           |values				|type           |
 		|tails          |TEST_HASH			|staticList     |
 
-		Then a response with the following is returned:
-		|keys						|
-		|duration					|
-		|info						|
-		|state						|
+		Then the response for "checkConsistency" should return with:
+		|keys           |values         |type           |
+		|state		|True           |string         |
+
+		When an inconsistent transaction is generated on "nodeA"
+
+		And "checkConsistency" is called on "nodeA" with:
+		|keys           |values				|type           |
+		|tails          |inconsistentTransactions       |responseList   |
+
+		Then the response for "checkConsistency" should return with:
+		|keys           |values         |type           |
+		|state		|False          |string         |
+
+
 
 
 	#Values can be found in util/static_vals.py

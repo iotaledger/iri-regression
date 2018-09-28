@@ -77,6 +77,14 @@ def prepare_options(args,optionList):
             elif arg_type == "staticList":
                 address = getattr(static_vals,value)
                 value = [address]
+            elif arg_type == "responseValue":
+                config = fetch_config('nodeId')
+                response = fetch_response(value)
+                value = response[config]
+            elif arg_type == "responseList":
+                config = fetch_config('nodeId')
+                response = fetch_response(value)
+                value = [response[config]]
 
             optionList[key] = value
 

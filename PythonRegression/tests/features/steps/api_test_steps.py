@@ -1,5 +1,5 @@
 from aloe import *
-from iota import ProposedTransaction,Address,Tag,TryteString,ProposedBundle
+from iota import ProposedTransaction,Address,Tag,TryteString,ProposedBundle,Transaction
 
 from util import static_vals
 from util.test_logic import api_test_logic as api_utils
@@ -33,6 +33,8 @@ This is the general api calling function. There are 3 inputs
         nodeAddress:    Node name identifier, will create address from node configuration 
         staticValue:    Static name identifier, will fetch value from util/static_vals.py 
         staticList:     Same as staticValue, except it places the results into a list 
+        responseValue:  Identifier for api call response value
+        responseList:   Same as responseValue, ecept it places the results into a list
  
 '''
 @step(r'"([^"]*)" is called on "([^"]*)" with:')
@@ -45,6 +47,8 @@ def api_method_is_called(step,apiCall,nodeName):
     options = {}
     api_utils.prepare_options(arg_list, options)
     responses[apiCall] = {}
+
+    logger.info(options)
 
     api = api_utils.prepare_api_call(nodeName)
     response = api_utils.fetch_call(apiCall, api, options)
@@ -163,6 +167,25 @@ def generate_transaction_and_attach(step,node):
     setattr(static_vals, "TEST_STORE_TRANSACTION", sent.get('trytes'))
 
 
+@step(r'the response for "([^"]*)" should return with:')
+def check_response_for_value(step,apiCall):
+    response_values = responses[apiCall][config['nodeId']]
+    logger.info(response_values)
+
+    expected_values = {}
+    args = step.hashes
+    api_utils.prepare_options(args,expected_values)
+
+
+    for expected_value_key in expected_values:
+        if expected_value_key in response_values:
+            expected_value = expected_values[expected_value_key]
+            response_value = response_values[expected_value_key]
+            assert str(expected_value) == str(response_value), \
+                "The expected value {} does not match the response value: {}".format(expected_value,response_value)
+
+
+
 
 ###
 #Response testing    
@@ -193,7 +216,31 @@ def compare_response(step):
                     assert str(responseKeys[responseKeyVal]) == str(keys[responseKeyVal])
             except:
                 logger.debug("No values to verify response with")        
- 
+
+ ###
+ #Create Inconsistent transaction
+#TODO: Merge Transaction Logic commit to modularise bundle generation
+@step(r'an inconsistent transaction is generated on "([^"]*)"')
+def create_inconsistent_transaction(step,node):
+    config['nodeId'] = node
+    api = api_utils.prepare_api_call(node)
+    branch = getattr(static_vals,"NULL_HASH")
+    trunk = branch
+    trytes = getattr(static_vals,"EMPTY_TRANSACTION_TRYTES")
+
+    transaction = api.attach_to_tangle(trunk,branch,[trytes],14)
+    transaction_trytes = transaction.get('trytes')
+    api.store_transactions(transaction_trytes)
+    transaction_hash = Transaction.from_tryte_string(transaction_trytes[0])
+    logger.info(transaction_hash.hash)
+
+    if 'inconsistentTransactions' not in responses:
+        responses['inconsistentTransactions'] = {}
+
+    responses['inconsistentTransactions'][node] = transaction_hash.hash
+
+
+
  ###
  #Test GetTrytes 
 @step(r'getTrytes is called with the hash ([^"]+)')
