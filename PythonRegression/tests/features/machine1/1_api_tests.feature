@@ -144,21 +144,17 @@ Feature: Test API calls on Machine 1
 		|keys			|values			|type               |
 		|states			|[False]		|string             |
 
-
+	
 	#Address can be found in util/static_vals.py
 	Scenario: GetBalances is called
 		Given "getBalances" is called on "nodeA" with:
-		|keys       |values				|type               |
-		|addresses  |TEST_EMPTY_ADDRESS			|staticList         |
-		|threshold  |100				|int                |
+		|keys           |values			        |type               |
+		|addresses      |TEST_EMPTY_ADDRESS	        |staticList         |
+		|threshold      |100			        |int                |
 
-
-		Then a response with the following is returned:
-		|keys						|
-		|balances					|
-		|duration					|
-		|milestoneIndex					|
-		|references					|
+		Then the response for "getBalances" should return with:
+		|keys           |values                         |type		    |
+		|balances       |[0]			        |string     	    |
 
 
 	Scenario: Interrupt attach to tangle
