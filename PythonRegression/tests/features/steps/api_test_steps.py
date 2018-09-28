@@ -2,7 +2,7 @@ from aloe import *
 from iota import Iota,ProposedTransaction,Address,Tag,TryteString,ProposedBundle
 
 from util import static_vals
-from util.test_logic import api_test_logic as tests
+from util.test_logic import api_test_logic as api_utils
 from time import sleep
 import threading
 import importlib
@@ -49,11 +49,11 @@ def api_method_is_called(step,apiCall,nodeName):
     arg_list = step.hashes
 
     options = {}
-    tests.prepare_options(arg_list,options)
+    api_utils.prepare_options(arg_list, options)
     responses[apiCall] = {}
 
-    api = tests.prepare_api_call(nodeName)
-    response = tests.fetch_call(apiCall,api,options)
+    api = api_utils.prepare_api_call(nodeName)
+    response = api_utils.fetch_call(apiCall, api, options)
 
     assert type(response) is dict, 'There may be something wrong with the response format: {}'.format(response)
     
@@ -70,11 +70,11 @@ def threaded_call(step,apiCall,node):
     arg_list = step.hashes
 
     options = {}
-    tests.prepare_options(arg_list,options)
-    api = tests.prepare_api_call(node)
+    api_utils.prepare_options(arg_list, options)
+    api = api_utils.prepare_api_call(node)
 
     def make_call(api,options):
-        return tests.fetch_call(apiCall,api,options)
+        return api_utils.fetch_call(apiCall, api, options)
 
     new_thread = threading.Thread(target=make_call, args=(api,options))
     new_thread.setDaemon(True)
@@ -114,7 +114,7 @@ def spam_call_gtta(step,numTests,node):
     config['apiCall'] = apiCall
     config['nodeId'] = node
     
-    api = tests.prepare_api_call(node)
+    api = api_utils.prepare_api_call(node)
     logging.info('Calls being made to %s',node)
     responseVal = []
     for i in range(int(numTests)):
@@ -135,9 +135,9 @@ def generate_transaction_and_attach(step,node):
     config['nodeId'] = node
     config['apiCall'] = 'attachToTangle'
     options = {}
-    api = tests.prepare_api_call(node)
+    api = api_utils.prepare_api_call(node)
 
-    tests.prepare_options(arg_list,options)
+    api_utils.prepare_options(arg_list, options)
     addresses = options.get('address')
     value = options.get('value')
 
@@ -193,7 +193,7 @@ def compare_response(step):
  #Test GetTrytes 
 @step(r'getTrytes is called with the hash ([^"]+)')
 def call_getTrytes(step,hash):
-    api = tests.prepare_api_call(config['nodeId'])
+    api = api_utils.prepare_api_call(config['nodeId'])
     testHash = getattr(static_vals, hash)
     response = api.get_trytes([testHash])
     logger.debug("Call may not have responded correctly: \n%s",response)
@@ -221,8 +221,8 @@ def make_neighbors(step,node1,node2):
     hosts = [host1,host2]
     ports = [port1,port2]
     
-    api1 = tests.prepare_api_call(node1)
-    api2 = tests.prepare_api_call(node2)
+    api1 = api_utils.prepare_api_call(node1)
+    api2 = api_utils.prepare_api_call(node2)
         
     response1 = api1.get_neighbors()
     response2 = api2.get_neighbors()
@@ -273,7 +273,7 @@ def send_transaction(step,tag,nodeName):
     logger.debug('Preparing Transaction...')
     logger.debug('Node: %s',nodeName)
     config['tag'] = tag
-    api = tests.prepare_api_call(nodeName)  
+    api = api_utils.prepare_api_call(nodeName)
     txn = \
         ProposedTransaction(
             address = 
@@ -292,7 +292,7 @@ def send_transaction(step,tag,nodeName):
 @step(r'findTransaction is called with the same tag on "([^"]*)"')
 def find_transaction_is_called(step,nodeName):
     logger.debug(nodeName)
-    api = tests.prepare_api_call(nodeName)    
+    api = api_utils.prepare_api_call(nodeName)
     logger.info("Searching for Transaction with the tag: {} on {}".format(config['tag'],nodeName))
     response = api.find_transactions(tags=[config['tag']])    
     config['findTransactionResponse'] = response
@@ -310,7 +310,7 @@ def find_transactions_from_address(step):
     logger.info('Finding milestones')
     node = config['nodeId']
     
-    api = tests.prepare_api_call(node)
+    api = api_utils.prepare_api_call(node)
     transactions = api.find_transactions(addresses = [step.multiline])
     responses['findTransactions'] = transactions 
 
@@ -336,7 +336,7 @@ def fetch_response(apiCall):
 
 
 def check_neighbors(step):
-    api = tests.prepare_api_call(config['nodeId'])
+    api = api_utils.prepare_api_call(config['nodeId'])
     response = api.getNeighbors()
     containsNeighbor = [False,False]
     
