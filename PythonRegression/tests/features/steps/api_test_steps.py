@@ -1,28 +1,22 @@
 from aloe import *
-from iota import Iota,ProposedTransaction,Address,Tag,TryteString,ProposedBundle
+from iota import ProposedTransaction,Address,Tag,TryteString,ProposedBundle
 
 from util import static_vals
 from util.test_logic import api_test_logic as api_utils
 from time import sleep
 import threading
-import importlib
 
 import logging 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-neighbors = static_vals.TEST_NEIGHBORS
 testAddress = static_vals.TEST_ADDRESS
-
-localVar = "TESTINGLOCALVARIABLESAAAAAAAAAAAAAAAAAAAAAAAAAAH"
 
 config = {}
 responses = {'getNodeInfo':{},'getNeighbors':{},'getTips':{},'getTransactionsToApprove': {},'getTrytes':{}}   
 
 
 
-###
-#Register API call    
 '''
 This is the general api calling function. There are 3 inputs
 
@@ -74,7 +68,10 @@ def threaded_call(step,apiCall,node):
     api = api_utils.prepare_api_call(node)
 
     def make_call(api,options):
-        return api_utils.fetch_call(apiCall, api, options)
+        response = api_utils.fetch_call(apiCall, api, options)
+        responses[apiCall] = {}
+        responses[apiCall][node] = response
+        return response
 
     new_thread = threading.Thread(target=make_call, args=(api,options))
     new_thread.setDaemon(True)
@@ -87,25 +84,33 @@ def threaded_call(step,apiCall,node):
     sleep(3)
 
 
-@step(r'all api call threads are joined')
-def join_threads(step):
-    logger.info('Joining threads')
-    for thread in config['threads']:
-        current_thread = config['threads'][thread]
-        logger.info('Joining current thread: {}'.format(current_thread.name))
-        current_thread.join(5)
-        if current_thread.is_alive():
-            logger.info('Thread is still alive'.format(current_thread.name))
-        else:
-            logger.info("Thread is dead")
+@step(r'the "([^"]*)" thread should return with:')
+def compare_thread_return(step,apiCall):
+    #Prepare response list for comparison
+    response_list = responses[apiCall][config['nodeId']]
+    #Exclude duration from response list
+    if 'duration' in response_list:
+        del response_list['duration']
+    response_keys = response_list.keys()
 
+    #Prepare expected values list for comparison
+    expected_values = {}
+    args = step.hashes
+    api_utils.prepare_options(args,expected_values)
+    keys = expected_values.keys()
 
-@step(r'while checking for running threads, there should be "(\d+)" running')
-def check_thread_count(step,numThreads):
-    logger.info("Checking threads")
-    threads_found = threading.active_count()
-    assert threads_found == int(numThreads), "{} threads were found, expected {}".format(threads_found,numThreads)
-    logger.info("No additional threads running")
+    #Confirm that the lists are of equal length before comparing
+    assert len(keys) == len(response_keys), 'Response: {} does not contain the same number of arguments: {}'.format(keys,response_keys)
+
+    for count in range(len(keys)):
+        response_key = response_keys[count]
+        response_value = response_list[response_key]
+        expected_value = expected_values[response_key]
+
+        assert response_value == expected_value, \
+            'Returned: {} does not match the expected value: {}'.format(response_value,expected_value)
+
+    logger.info('Responses match')
 
 
 @step(r'GTTA is called (\d+) times on "([^"]*)"')

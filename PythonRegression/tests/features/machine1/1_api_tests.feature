@@ -152,6 +152,9 @@ Feature: Test API calls on Machine 1
 
 
 	Scenario: Interrupt attach to tangle
+	    Begins attaching a transaction to the tangle with a high MWM, then issues an interrupt to the node
+	    If the interrupt is successful, the attachToTangle response will return a null tryte list
+
 		Given "attachToTangle" is called on one thread in "nodeA" with:
 		|keys                   |values			|type           |
 		|trytes                 |EMPTY_TRANSACTION_TRYTES|staticList     |
@@ -162,9 +165,10 @@ Feature: Test API calls on Machine 1
 		And "interruptAttachingToTangle" is called on one thread in "nodeA" with:
 		|keys                   |values				|type           |
 
-		When all api call threads are joined
-		#The only active thread should be the main testing thread
-		Then while checking for running threads, there should be "1" running
+        # Do not include duration in the return expectations as it will always return a variable amount
+		Then the "attachToTangle" thread should return with:
+		|keys                   |values         |type           |
+		|trytes                 |NULL_LIST      |staticValue    |
 
 
 
