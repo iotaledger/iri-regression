@@ -3,7 +3,7 @@ from iota import ProposedTransaction,Address,Tag,TryteString,ProposedBundle,Tran
 
 from util import static_vals
 from util.test_logic import api_test_logic as api_utils
-from time import sleep
+from time import sleep, time
 import threading
 
 import logging 
@@ -114,23 +114,91 @@ def compare_thread_return(step,apiCall):
 
     logger.info('Responses match')
 
-
+#TODO: Break these functions down into utilities
 @step(r'GTTA is called (\d+) times on "([^"]*)"')
 def spam_call_gtta(step,numTests,node):
-    apiCall = 'getTransactionsToApprove' 
+    start = time()
+
+    apiCall = 'getTransactionsToApprove'
     config['apiCall'] = apiCall
     config['nodeId'] = node
-    
-    api = api_utils.prepare_api_call(node)
+
+    nodes = {}
+    queue = {}
+    threads = {}
+    thread_status = {}
+
+    for current_node in world.machine['nodes']:
+        api = api_utils.prepare_api_call(current_node)
+        nodes[current_node] = api
+        queue[current_node] = "Not Running"
+
+
+    def run_call(node,api):
+        logger.debug('Running Thread on {}'.format(node))
+        queue[node] = "Running"
+        response = api.get_transactions_to_approve(depth=3)
+        logger.debug('Response complete, placing thread back in queue')
+        responseVal.append(response)
+        queue[node] = "Not Running"
+
     logging.info('Calls being made to %s',node)
     responseVal = []
-    for i in range(int(numTests)):
-        logging.debug("Call %d made", i+1)
-        response = api.get_transactions_to_approve(depth=3)
-        responseVal.append(response)
-        
+
+    i = 0
+    logger.info(int(numTests))
+    while i < int(numTests):
+        logger.info('Status: {} / {}'.format(i,int(numTests)))
+        for thread in queue:
+            if queue[thread] == "Not Running" and i < int(numTests):
+                new_thread = threading.Thread(name=thread,target=run_call,args=(thread,nodes[thread]))
+                new_thread.start()
+                threads[thread] = new_thread
+                i += 1
+        sleep(1)
+
+        logger.debug('Joining threads')
+        for thread_id in threads:
+            thread = threads[thread_id]
+            thread.join(1)
+            alive = thread.is_alive()
+            thread_status[thread_id] = alive
+
+        logger.debug('Pruning threads')
+        for thread in thread_status:
+            if thread_status[thread] == False and thread in threads:
+                threads.pop(thread)
+
+
+    run = True
+    while run == True:
+        logger.info(len(threads))
+        thread_count = 0
+        for thread in threads:
+            current_thread = threads[thread]
+            alive = current_thread.is_alive()
+            sleep(1)
+            if alive:
+                logger.info('Waiting')
+                sleep(3)
+            else:
+                logger.info('Thread is dead already, counter + 1')
+                thread_count += 1
+        if thread_count == len(threads):
+            logger.info('The deed is done')
+            run = False
+        else:
+            logger.info(thread_count)
+            logger.info(len(threads))
+            logger.info('Keep running')
+
+    logger.info(len(responseVal))
     responses[apiCall] = {}
     responses[apiCall][node] = responseVal
+
+    end = time()
+    time_spent = end - start
+    logger.info('Time spent on loop: {}'.format(time_spent))
 
 
 ###
