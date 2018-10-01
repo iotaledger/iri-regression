@@ -12,3 +12,15 @@ nodes:
   
   nodeB:
     <<: *db_1
+
+  nodeC:
+    <<: *db_1
+
+  nodeD:
+    <<: *db_1
+
+  nodeE:
+    <<: *db_1
+
+  nodeF:
+    <<: *db_1
