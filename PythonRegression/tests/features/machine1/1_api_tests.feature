@@ -217,7 +217,7 @@ Feature: Test API calls on Machine 1
 		|hashes						|
 
 
-    @now
+
 	Scenario: Broadcast a test transacion
 		Send a test transaction from one node in a machine with a unique tag, and find that transaction
 		through a different node in the same machine

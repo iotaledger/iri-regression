@@ -297,54 +297,6 @@ def make_neighbors(step,node1,node2):
     logger.info(response)
 
 
-'''  
-@step(r'a transaction with the tag "([^"]*)" is sent from "([^"]*)"')
-def send_transaction(step,tag,nodeName):
-    logger.debug('Preparing Transaction...')
-    logger.debug('Node: %s',nodeName)
-    world.config['tag'] = tag
-    api = api_utils.prepare_api_call(nodeName)
-
-    arg_list = {
-        'address': Address(testAddress),
-        'message': TryteString.from_unicode('Test Transaction propagation'),
-        'tag': Tag(tag),
-        'value': 0
-    }
-
-    transaction = transactions.create_and_attach_transaction(api,arg_list)
-
-    api.broadcast_and_store(transaction.get('trytes'))
-    logger.debug("Giving the transaction time to propagate...")
-    sleep(10)
-
-
-#TODO: remove unneeded code
-@step(r'findTransaction is called with the same tag on "([^"]*)"')
-def find_transaction_is_called(step,nodeName):
-    logger.debug(nodeName)
-    api = api_utils.prepare_api_call(nodeName)
-    logger.info("Searching for Transaction with the tag: {} on {}".format(world.config['tag'],nodeName))
-    response = api.find_transactions(tags=[world.config['tag']])
-    world.config['findTransactionResponse'] = response
-    
-@step(r'the Transaction should be found')
-def check_transaction_response(step):
-    logger.debug("Checking response...")
-    response = world.config['findTransactionResponse']
-    assert len(response['hashes']) != 0, 'Transactions not found'
-    logger.info("{} Transactions found".format(len(response['hashes'])))  
- '''
-## Find Transactions
-@step(r'find transaction is called with the address:')
-def find_transactions_from_address(step):
-    logger.info('Finding milestones')
-    node = world.config['nodeId']
-    
-    api = api_utils.prepare_api_call(node)
-    transactions = api.find_transactions(addresses = [step.multiline])
-    world.responses['findTransactions'] = transactions
-
 
 def check_responses_for_call(apiCall):
     if len(world.responses[apiCall]) > 0:
