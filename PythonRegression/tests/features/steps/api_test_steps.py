@@ -126,7 +126,6 @@ def spam_call_gtta(step,numTests,node):
 
 ###
 #Transaction Generator
-#TODO: Merge Transaction Logic commit to modularise bundle generation
 @step(r'a transaction is generated and attached on "([^"]*)" with:')
 def generate_transaction_and_attach(step,node):
     arg_list = step.hashes
@@ -134,14 +133,15 @@ def generate_transaction_and_attach(step,node):
     world.config['apiCall'] = 'attachToTangle'
     options = {}
     api = api_utils.prepare_api_call(node)
-
     api_utils.prepare_options(arg_list, options)
-    addresses = options.get('address')
-    value = options.get('value')
 
-    arg_list = {'address': Address(addresses[0]), 'value': value}
+    transaction_args = {}
+    for key in options:
+        transaction_args[key] = options.get(key)
+    api_utils.prepare_transaction_arguments(transaction_args)
 
-    transaction = transactions.create_and_attach_transaction(api,arg_list)
+    transaction = transactions.create_and_attach_transaction(api,transaction_args)
+    api.broadcast_and_store(transaction.get('trytes'))
     logger.info('Transaction Sent')
 
     setattr(static_vals, "TEST_STORE_TRANSACTION", transaction.get('trytes'))
@@ -149,7 +149,7 @@ def generate_transaction_and_attach(step,node):
 
 @step(r'a response for "([^"]*)" should exist')
 def response_exists(step,apiCall):
-    response = world.responses[apiCall][world.config['nodeId']]git
+    response = world.responses[apiCall][world.config['nodeId']]
     empty_values = {}
     for key in response:
         if key != 'duration':
@@ -166,7 +166,6 @@ def check_response_for_value(step,apiCall):
     expected_values = {}
     args = step.hashes
     api_utils.prepare_options(args,expected_values)
-
 
     for expected_value_key in expected_values:
         if expected_value_key in response_values:
@@ -239,28 +238,6 @@ def create_inconsistent_transaction(step,node):
     world.responses['inconsistentTransactions'][node] = transaction_hash.hash
 
 
-#TODO: Remove unneeded logic
- ###
- #Test GetTrytes 
-@step(r'getTrytes is called on "([^"]*)" with the hash ([^"]+)')
-def call_getTrytes(step,node,hash):
-    api = api_utils.prepare_api_call(node)
-    testHash = getattr(static_vals, hash)
-    response = api.get_trytes([testHash])
-    logger.debug("Call may not have responded correctly: \n%s",response)
-    assert type(response) is dict
-    world.responses['getTrytes'] = {}
-    world.responses['getTrytes'][node] = response
-
-
-@step(r'the response should be equal to ([^"]+)')
-def check_trytes(step,trytes):
-    response = world.responses['getTrytes'][world.config['nodeId']]
-    testTrytes = getattr(static_vals,trytes)  
-    if 'trytes' in response:
-        assert response['trytes'][0] == testTrytes, "Trytes do not match"
-
-
 ###
 #Test transactions
 @step(r'"([^"]*)" and "([^"]*)" are neighbors')
@@ -318,8 +295,9 @@ def make_neighbors(step,node1,node2):
     logger.info(response)
     response = api2.get_neighbors()
     logger.info(response)
-        
-     
+
+
+'''  
 @step(r'a transaction with the tag "([^"]*)" is sent from "([^"]*)"')
 def send_transaction(step,tag,nodeName):
     logger.debug('Preparing Transaction...')
@@ -356,7 +334,7 @@ def check_transaction_response(step):
     response = world.config['findTransactionResponse']
     assert len(response['hashes']) != 0, 'Transactions not found'
     logger.info("{} Transactions found".format(len(response['hashes'])))  
-                                  
+ '''
 ## Find Transactions
 @step(r'find transaction is called with the address:')
 def find_transactions_from_address(step):

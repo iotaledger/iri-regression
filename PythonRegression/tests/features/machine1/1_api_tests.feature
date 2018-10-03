@@ -225,12 +225,13 @@ Feature: Test API calls on Machine 1
 		Given "nodeA" and "nodeB" are neighbors
 		When a transaction is generated and attached on "nodeA" with:
 		|keys       |values				|type           |
-		|address    |TEST9TAG9ONE			|string         |
+		|address    |TEST_ADDRESS			|staticValue    |
+		|tag        |TEST9TAG9AFRO			|string         |
 		|value      |0					|int            |
 
 		And "findTransactions" is called on "nodeB" with:
 		|keys       |values             |type           |
-		|tags       |TEST9TAG9ONE       |list           |
+		|tags       |TEST9TAG9AFRO      |list           |
 
 		Then a response for "findTransactions" should exist
 

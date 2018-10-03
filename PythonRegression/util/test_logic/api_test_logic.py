@@ -1,5 +1,5 @@
 from aloe import world
-from iota import Iota
+from iota import Iota,Address,Tag,TryteString
 from util import static_vals
 
 import logging
@@ -139,3 +139,13 @@ def check_if_empty(value):
     else:
         isEmpty = False
     return isEmpty
+
+
+def prepare_transaction_arguments(arg_list):
+    for key in arg_list:
+        if key == 'address':
+            arg_list[key] = Address(arg_list[key])
+        elif key == 'tag':
+            arg_list[key] = Tag(arg_list[key])
+        elif key == 'message':
+            arg_list[key] = TryteString.from_unicode(arg_list[key])
