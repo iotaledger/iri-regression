@@ -3,9 +3,8 @@ from iota import ProposedTransaction,Address,Tag,TryteString,ProposedBundle,Tran
 
 from util import static_vals
 from util.test_logic import api_test_logic as api_utils
+from util.threading_logic import thread_logic as threads
 from time import sleep
-import threading
-import queue
 
 import logging 
 logging.basicConfig(level=logging.INFO)
@@ -58,9 +57,8 @@ def api_method_is_called(step,apiCall,nodeName):
     world.responses[apiCall][nodeName] = response
 
 #This method is identical to the method above, but creates a new thread
-#TODO: Find a way to pass aloe.world variable between threads to eliminate need for duplicate code
 @step(r'"([^"]*)" is called in parallel on "([^"]*)" with:')
-def threaded_call(step,apiCall,node):
+def threaded_api_call(step,apiCall,node):
     logger.info("Creating thread for {}".format(apiCall))
     world.config['apiCall'] = apiCall
     world.config['nodeId'] = node
@@ -70,23 +68,8 @@ def threaded_call(step,apiCall,node):
     api_utils.prepare_options(arg_list, options)
     api = api_utils.prepare_api_call(node)
 
-    def make_call(api,options,q):
-        response = api_utils.fetch_call(apiCall, api, options)
-        responses = q.get()
-        responses[apiCall] = {}
-        responses[apiCall][node] = response
-        return response
-
-    q = queue.Queue()
-    q.put(world.responses)
-    new_thread = threading.Thread(target=make_call, args=(api,options,q))
-    new_thread.setDaemon(True)
-    new_thread.start()
-
-    if 'threads' not in world.config:
-        world.config['threads'] = {}
-
-    world.config['threads'][apiCall] = new_thread
+    q = threads.populate_queue(world.responses,world.config)
+    threads.make_thread(api_utils.make_api_call,api,options,q)
     #Wait 3 seconds to give node time to respond
     sleep(3)
 

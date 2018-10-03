@@ -118,3 +118,15 @@ def fetch_call(apiCall,api,options):
 
     return response
 
+
+def make_api_call(api,options,q):
+    responses = q.get()
+    config = q.get()
+
+    apiCall = config['apiCall']
+    node = config['nodeId']
+
+    response = fetch_call(apiCall, api, options)
+    responses[apiCall] = {}
+    responses[apiCall][node] = response
+    return response
