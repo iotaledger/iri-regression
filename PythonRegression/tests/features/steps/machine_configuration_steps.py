@@ -1,13 +1,10 @@
-from aloe import before,world
+from aloe import before,world, after
 from yaml import load, Loader
 
 
-
-config = {}
-
 #Configuration
-@before.all
-def configuration():
+@before.each_feature
+def configuration(feature):
     machine = []   
          
     yamlPath = './output.yml'
@@ -24,4 +21,10 @@ def configuration():
         machine = nodes
           
     world.machine = machine
-    
+    world.config = {}
+    world.responses = {}
+
+@after.each_example
+def deconfiguration(scenario,outline,steps):
+    world.config = {}
+    world.responses = {}
