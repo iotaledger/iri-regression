@@ -217,13 +217,20 @@ Feature: Test API calls on Machine 1
 		|hashes						|
 
 
-
+    @now
 	Scenario: Broadcast a test transacion
 		Send a test transaction from one node in a machine with a unique tag, and find that transaction
 		through a different node in the same machine
 		
 		Given "nodeA" and "nodeB" are neighbors
-		When a transaction with the tag "TEST9TAG9ONE" is sent from "nodeA"
-		And findTransaction is called with the same tag on "nodeB" 
-		Then the transaction should be found 
+		When a transaction is generated and attached on "nodeA" with:
+		|keys       |values				|type           |
+		|address    |TEST9TAG9ONE			|string         |
+		|value      |0					|int            |
+
+		And "findTransactions" is called on "nodeB" with:
+		|keys       |values             |type           |
+		|tags       |TEST9TAG9ONE       |list           |
+
+		Then a response for "findTransactions" should exist
 
