@@ -4,6 +4,7 @@ from iota import ProposedTransaction,Address,Tag,TryteString,ProposedBundle,Tran
 from util import static_vals
 from util.test_logic import api_test_logic as api_utils
 from util.threading_logic import thread_logic as threads
+from util.transaction_bundle_logic import transaction_logic as transactions
 from time import sleep
 
 import logging 
@@ -29,6 +30,7 @@ This is the general api calling function. There are 3 inputs
     being made. 
     Types:
         string:         Basic string argument, will be taken as is
+        list:           Places string in list 
         int:            Basic integer argument, will be converted to int before call is made
         nodeAddress:    Node name identifier, will create address from node configuration 
         staticValue:    Static name identifier, will fetch value from util/static_vals.py 
@@ -36,7 +38,7 @@ This is the general api calling function. There are 3 inputs
         responseValue:  Identifier for api call response value
         responseList:   Same as responseValue, ecept it places the results into a list
         bool:           Bool argument, returns True or False
- 
+         
 '''
 @step(r'"([^"]*)" is called on "([^"]*)" with:')
 def api_method_is_called(step,apiCall,nodeName):
@@ -77,7 +79,6 @@ def threaded_api_call(step,apiCall,node):
 @step(r'the "([^"]*)" parallel call should return with:')
 def compare_thread_return(step,apiCall):
     #Prepare response list for comparison
-    logger.info(world.responses)
     response_list = world.responses[apiCall][world.config['nodeId']]
     #Exclude duration from response list
     if 'duration' in response_list:
@@ -91,7 +92,8 @@ def compare_thread_return(step,apiCall):
     keys = expected_values.keys()
 
     #Confirm that the lists are of equal length before comparing
-    assert len(keys) == len(response_keys), 'Response: {} does not contain the same number of arguments: {}'.format(keys,response_keys)
+    assert len(keys) == len(response_keys), \
+        'Response: {} does not contain the same number of arguments: {}'.format(keys,response_keys)
 
     for count in range(len(keys)):
         response_key = response_keys[count]
@@ -137,21 +139,25 @@ def generate_transaction_and_attach(step,node):
     addresses = options.get('address')
     value = options.get('value')
 
-    transaction = ProposedTransaction(address=Address(addresses[0]), value = value)
+    arg_list = {'address': Address(addresses[0]), 'value': value}
 
-    bundle = ProposedBundle()
-    bundle.add_transaction(transaction)
-    bundle.finalize()
-    trytes = str(bundle[0].as_tryte_string())
-
-    gtta = api.get_transactions_to_approve(depth=3)
-    branch = str(gtta['branchTransaction'])
-    trunk = str(gtta['trunkTransaction'])
-
-    sent = api.attach_to_tangle(trunk,branch,[trytes],9)
+    transaction = transactions.create_and_attach_transaction(api,arg_list)
     logger.info('Transaction Sent')
 
-    setattr(static_vals, "TEST_STORE_TRANSACTION", sent.get('trytes'))
+    setattr(static_vals, "TEST_STORE_TRANSACTION", transaction.get('trytes'))
+
+
+@step(r'a response for "([^"]*)" should exist')
+def response_exists(step,apiCall):
+    response = world.responses[apiCall][world.config['nodeId']]git
+    empty_values = {}
+    for key in response:
+        if key != 'duration':
+            isEmpty = api_utils.check_if_empty(response[key])
+            if isEmpty == True:
+                empty_values[key] = response[key]
+
+    assert len(empty_values) == 0, "There was an empty value in the response {}".format(empty_values)
 
 
 @step(r'the response for "([^"]*)" should return with:')
@@ -166,8 +172,10 @@ def check_response_for_value(step,apiCall):
         if expected_value_key in response_values:
             expected_value = expected_values[expected_value_key]
             response_value = response_values[expected_value_key]
+
             if type(response_value) is list:
                 response_value = response_value[0]
+
             assert expected_value == response_value, \
                 "The expected value {} does not match the response value: {}".format(expected_value,response_value)
 
@@ -210,20 +218,20 @@ Creates an inconsistent transaction by generating a zero value transaction that 
 a non-existent transaction as its branch and trunk, thus not connecting with any other part 
 of the tangle.
 '''
-#TODO: Merge Transaction Logic commit to modularise bundle generation
 @step(r'an inconsistent transaction is generated on "([^"]*)"')
 def create_inconsistent_transaction(step,node):
     world.config['nodeId'] = node
     api = api_utils.prepare_api_call(node)
-    branch = getattr(static_vals,"NULL_HASH")
-    trunk = branch
+    trunk = getattr(static_vals,"NULL_HASH")
+    branch = trunk
     trytes = getattr(static_vals,"EMPTY_TRANSACTION_TRYTES")
 
-    transaction = api.attach_to_tangle(trunk,branch,[trytes],14)
+    argument_list = {'trunk_transaction': trunk, 'branch_transaction': branch,
+                     'trytes': [trytes], 'min_weight_magnitude': 14}
+
+    transaction = transactions.attach_store_and_broadcast(api,argument_list)
     transaction_trytes = transaction.get('trytes')
-    api.store_transactions(transaction_trytes)
     transaction_hash = Transaction.from_tryte_string(transaction_trytes[0])
-    logger.info(transaction_hash.hash)
 
     if 'inconsistentTransactions' not in world.responses:
         world.responses['inconsistentTransactions'] = {}
@@ -231,7 +239,7 @@ def create_inconsistent_transaction(step,node):
     world.responses['inconsistentTransactions'][node] = transaction_hash.hash
 
 
-
+#TODO: Remove unneeded logic
  ###
  #Test GetTrytes 
 @step(r'getTrytes is called on "([^"]*)" with the hash ([^"]+)')
@@ -318,21 +326,22 @@ def send_transaction(step,tag,nodeName):
     logger.debug('Node: %s',nodeName)
     world.config['tag'] = tag
     api = api_utils.prepare_api_call(nodeName)
-    txn = \
-        ProposedTransaction(
-            address = 
-            Address(testAddress),
-            message = TryteString.from_unicode('Test Transaction propagation'),
-            tag = Tag(tag),
-            value = 0,
-            )
-    
-    logger.info("Sending Transaction with tag '{}' to {}...".format(tag,nodeName))
-    txn_sent = api.send_transfer(depth=3, transfers=[txn])
+
+    arg_list = {
+        'address': Address(testAddress),
+        'message': TryteString.from_unicode('Test Transaction propagation'),
+        'tag': Tag(tag),
+        'value': 0
+    }
+
+    transaction = transactions.create_and_attach_transaction(api,arg_list)
+
+    api.broadcast_and_store(transaction.get('trytes'))
     logger.debug("Giving the transaction time to propagate...")
     sleep(10)
-   
-   
+
+
+#TODO: remove unneeded code
 @step(r'findTransaction is called with the same tag on "([^"]*)"')
 def find_transaction_is_called(step,nodeName):
     logger.debug(nodeName)

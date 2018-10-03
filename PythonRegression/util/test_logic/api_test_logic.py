@@ -68,6 +68,8 @@ def prepare_options(args,optionList):
 
             if arg_type == "int":
                 value = int(value)
+            elif arg_type == "list":
+                value = [value]
             elif arg_type == "nodeAddress":
                 host = world.machine['nodes'][value]['host']
                 port = world.machine['nodes'][value]['ports']['gossip-udp']
@@ -130,3 +132,10 @@ def make_api_call(api,options,q):
     responses[apiCall] = {}
     responses[apiCall][node] = response
     return response
+
+def check_if_empty(value):
+    if len(value) == 0:
+        isEmpty = True
+    else:
+        isEmpty = False
+    return isEmpty
