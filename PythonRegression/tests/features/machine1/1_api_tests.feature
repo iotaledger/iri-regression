@@ -226,12 +226,12 @@ Feature: Test API calls on Machine 1
 		When a transaction is generated and attached on "nodeA" with:
 		|keys       |values				|type           |
 		|address    |TEST_ADDRESS			|staticValue    |
-		|tag        |TEST9TAG9AFRO			|string         |
+		|tag        |TEST9TAG9ONE			|string         |
 		|value      |0					|int            |
 
 		And "findTransactions" is called on "nodeB" with:
 		|keys       |values             |type           |
-		|tags       |TEST9TAG9AFRO      |list           |
+		|tags       |TEST9TAG9ONE       |list           |
 
 		Then a response for "findTransactions" should exist
 

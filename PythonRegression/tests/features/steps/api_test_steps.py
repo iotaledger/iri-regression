@@ -5,6 +5,7 @@ from util import static_vals
 from util.test_logic import api_test_logic as api_utils
 from util.threading_logic import thread_logic as threads
 from util.transaction_bundle_logic import transaction_logic as transactions
+from util.neighbor_logic import neighbor_logic as neighbors
 from time import sleep
 
 import logging 
@@ -242,59 +243,28 @@ def create_inconsistent_transaction(step,node):
 #Test transactions
 @step(r'"([^"]*)" and "([^"]*)" are neighbors')
 def make_neighbors(step,node1,node2):
-    host1 = world.machine['nodes'][node1]['podip']
-    port1 = world.machine['nodes'][node1]['clusterip_ports']['gossip-udp']
-    host2 = world.machine['nodes'][node2]['podip']
-    port2 = world.machine['nodes'][node2]['clusterip_ports']['gossip-udp']
-    
-    hosts = [host1,host2]
-    ports = [port1,port2]
-    
-    api1 = api_utils.prepare_api_call(node1)
-    api2 = api_utils.prepare_api_call(node2)
-        
-    response1 = api1.get_neighbors()
-    response2 = api2.get_neighbors()
-    neighbors1 = list(response1['neighbors'])
-    neighbors2 = list(response2['neighbors'])
-    host = hosts[0]
-    port = ports[0]
-    address1 = "udp://" + str(host) + ":" + str(port)     
-    host = hosts[1]
-    port = ports[1]
-    address2 = "udp://" + str(host) + ":" + str(port) 
-    
-    logger.debug("Checking if nodes are paired")
-    
-    containsNeighbor = False
-    for neighbor in range(len(neighbors1)):
-        if neighbors1[neighbor]['address']:
-            containsNeighbor = True
-            logger.debug("Neighbor found")
+    neighbor_candidates = [node1,node2]
+    neighbor_info = {}
 
-    
-    if containsNeighbor == False:
-        api1.add_neighbors([address2.decode()])
-        api2.add_neighbors([address1.decode()])
-        logger.debug("Nodes paired")
-    
-        
-    containsNeighbor = False
-    for neighbor in range(len(neighbors2)):
-        if neighbors2[neighbor]['address']:
-            containsNeighbor = True 
-            logger.debug("Neighbor found")
+    for node in range(len(neighbor_candidates)):
+        node = neighbor_candidates[node]
+        host = world.machine['nodes'][node]['podip']
+        port = world.machine['nodes'][node]['clusterip_ports']['gossip-udp']
+        api = api_utils.prepare_api_call(node)
+        response = api.get_neighbors()
+        neighbor_info[node] = {
+            'api': api,
+            'node_neighbors': list(response['neighbors']),
+            'address': str(host) + ":" + str(port)
+        }
 
-    if containsNeighbor == False:
-        api2.add_neighbors([address1.decode()])
-        api1.add_neighbors([address2.decode()]) 
-        logger.debug("Nodes paired")
-        
-        
-    response = api1.get_neighbors()
-    logger.info(response)
-    response = api2.get_neighbors()
-    logger.info(response)
+    logger.info('Checking neighbors for {}'.format(node1))
+    neighbors.check_if_neighbors(neighbor_info[node1]['api'],
+                                 neighbor_info[node1]['node_neighbors'], neighbor_info[node2]['address'])
+
+    logger.info('Checking neighbors for {}'.format(node2))
+    neighbors.check_if_neighbors(neighbor_info[node2]['api'],
+                                 neighbor_info[node1]['node_neighbors'], neighbor_info[node2]['address'])
 
 
 
@@ -317,29 +287,4 @@ def fetch_config(key):
 def fetch_response(apiCall):
     return world.responses[apiCall]
 
-'''
-This method is used to determine if a node contains the neighbors specified in the steps feature list
 
-@returns a list of two bools 
-
-If the return contains a False response, then the neighbor associated with that bool will be added in the remaining
-methods in the step.  
-'''
-#TODO: Move this function to a utility file along with all other functionality involving neighbors
-def check_neighbors(step):
-    api = api_utils.prepare_api_call(world.config['nodeId'])
-    response = api.getNeighbors()
-    containsNeighbor = [False,False]
-    
-    for i in response:
-        expectedNeighbors = step.hashes
-        if type(response[i]) != int:
-            for x in range(len(response[i])):    
-                if expectedNeighbors[0]['neighbors'] == response[i][x]['address']:
-                    containsNeighbor[0] = True  
-                if expectedNeighbors[1]['neighbors'] == response[i][x]['address']:
-                    containsNeighbor[1] = True  
-    
-    return containsNeighbor
-     
-    
