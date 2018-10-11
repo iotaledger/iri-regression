@@ -73,25 +73,38 @@ def threaded_api_call(step,apiCall,node):
     q = threads.populate_queue(world.responses,world.config)
     threads.make_thread(api_utils.make_api_call,api,options,q)
     #Wait 3 seconds to give node time to respond
-    sleep(3)
+    sleep(1)
 
 
-@step(r'GTTA is called (\d+) times on "([^"]*)"')
-def spam_call_gtta(step,numTests,node):
-    apiCall = 'getTransactionsToApprove' 
+'''
+This method makes an apiCall a specified number of times and stores the responses in the aloe.world object.
+
+@param apiCall:     The api call that you wish to make
+@param numTests:    The number of times you would like to make the call
+@param node:        The node you'd like to make the calls on
+@param table:       Gherkin table with api call arguments
+'''
+
+@step(r'"([^"]*)" is called (\d+) times on "([^"]*)" with:')
+def spam_call_gtta(step,apiCall,numTests,node):
     world.config['apiCall'] = apiCall
     world.config['nodeId'] = node
-    
+    arg_list = step.hashes
+
+    options = {}
+    api_utils.prepare_options(arg_list, options)
+
     api = api_utils.prepare_api_call(node)
     logging.info('Calls being made to %s',node)
-    responseVal = []
+    responseList = []
+
     for i in range(int(numTests)):
         logging.debug("Call %d made", i+1)
-        response = api.get_transactions_to_approve(depth=3)
-        responseVal.append(response)
+        response = api_utils.fetch_call(apiCall,api,options)
+        responseList.append(response)
         
     world.responses[apiCall] = {}
-    world.responses[apiCall][node] = responseVal
+    world.responses[apiCall][node] = responseList
 
 
 ###

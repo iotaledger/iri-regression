@@ -6,7 +6,10 @@ Feature: Test GTTA for blowballs
 		milestones. The total percentage of returned milestones should 
 		be less than 5%. 
 		
-		Given GTTA is called 1000 times on "nodeA"
+		Given "getTransactionsToApprove" is called 1000 times on "nodeA" with:
+		|keys           |values         |type           |
+		|depth          |3              |int            |
+
 		And find transaction is called with the address: 
 		"""
 		EFPNKGPCBXXXLIBYFGIGYBYTFFPIOQVNNVVWTTIYZO9NFREQGVGDQQHUUQ9CLWAEMXVDFSSMOTGAHVIBH
