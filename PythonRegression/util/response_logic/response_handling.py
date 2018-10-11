@@ -1,11 +1,6 @@
-import json
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-
-def print_response(json_data):
-    logger.info(json_data)
 
 def find_in_response(key,response):
     isPresent = False
@@ -29,4 +24,3 @@ def find_in_response(key,response):
                 break
 
     assert isPresent is True, '{} does not appear to be present in the response: {}'.format(key,response)
-    

@@ -101,6 +101,7 @@ def generate_transaction_and_attach(step,node):
     arg_list = step.hashes
     world.config['nodeId'] = node
     world.config['apiCall'] = 'attachToTangle'
+
     options = {}
     api = api_utils.prepare_api_call(node)
     api_utils.prepare_options(arg_list, options)
@@ -112,6 +113,9 @@ def generate_transaction_and_attach(step,node):
 
     transaction = transactions.create_and_attach_transaction(api,transaction_args)
     api.broadcast_and_store(transaction.get('trytes'))
+
+    world.responses['attachToTangle'] = {}
+    world.responses['attachToTangle'][node] = transaction
     logger.info('Transaction Sent')
 
     setattr(static_vals, "TEST_STORE_TRANSACTION", transaction.get('trytes'))

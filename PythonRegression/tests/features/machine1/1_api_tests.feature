@@ -47,7 +47,7 @@ Feature: Test API calls on Machine 1
 		|keys						|
 		|address					|
 		|numberOfAllTransactions			|
-		|numberOfAllTransactionRequests			|
+		|numberOfRandomTransactionRequests			|
 		|numberOfNewTransactions			|
 		|numberOfInvalidTransactions			|
 		|numberOfSentTransactions			|
