@@ -1,5 +1,6 @@
 from aloe import world, step
 from util.test_logic import api_test_logic as api_utils
+from util.response_logic import response_handling as response_handling
 
 import logging
 logging.basicConfig(level=logging.INFO)
@@ -81,23 +82,13 @@ def compare_response(step):
     nodeId = world.config['nodeId']
     apiCall = world.config['apiCall']
 
-    if apiCall == 'getNodeInfo' or apiCall == 'getTransactionsToApprove':
-        response = world.responses[apiCall][nodeId]
-        responseKeys = list(response.keys())
-        responseKeys.sort()
-        logger.debug('Response Keys: %s', responseKeys)
+    response = world.responses[apiCall][nodeId]
+    keyList = []
 
-        for response_key_val in range(len(response)):
-            assert str(responseKeys[response_key_val]) == str(keys[response_key_val]['keys']), "There was an error with the response"
+    for key in range(len(keys)):
+        keyList.append(keys[key]['keys'])
 
-    elif apiCall == 'getNeighbors' or apiCall == 'getTips':
-        responseList = world.responses[apiCall][nodeId]
-        responseKeys = list(responseList.keys())
-        logger.debug('Response Keys: %s', responseKeys)
 
-        for responseNumber in range(len(responseList)):
-            try:
-                for responseKeyVal in range(len(responseList[responseNumber])):
-                    assert str(responseKeys[responseKeyVal]) == str(keys[responseKeyVal])
-            except:
-                logger.debug("No values to verify response with")
+    for key in range(len(keyList)):
+        response_handling.find_in_response(keyList[key],response)
+
