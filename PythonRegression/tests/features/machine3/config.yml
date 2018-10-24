@@ -1,6 +1,15 @@
 defaults: &db_1
-  db: https://s3.eu-central-1.amazonaws.com/iotaledger-dbfiles/dev/testnet_files.tgz
-  db_checksum: 6eaa06d5442416b7b8139e337a1598d2bae6a7f55c2d9d01f8c5dac69c004f75
+  db: https://s3.eu-central-1.amazonaws.com/iotaledger-dbfiles/dev/Blowball_Tests_db.tar
+  db_checksum: 31f98688cab6a34c7a5653ae96eb56076beb8327ec83ecc5b5185af1cc031637
+  iri_args: ['--testnet-coordinator',
+  'EFPNKGPCBXXXLIBYFGIGYBYTFFPIOQVNNVVWTTIYZO9NFREQGVGDQQHUUQ9CLWAEMXVDFSSMOTGAHVIBH',
+  '--milestone-keys',
+  '18',
+  '--milestone-start',
+  '2',
+  '--testnet-no-coo-validation',
+  '--testnet'
+  ]
 
 seeds: # For internal use by the regression system. 
     - SEED
@@ -11,4 +20,16 @@ nodes:
     <<: *db_1
   
   nodeB:
+    <<: *db_1
+
+  nodeC:
+    <<: *db_1
+
+  nodeD:
+    <<: *db_1
+
+  nodeE:
+    <<: *db_1
+
+  nodeF:
     <<: *db_1
