@@ -9,6 +9,13 @@ logger = logging.getLogger(__name__)
 
 
 def prepare_api_call(nodeName):
+    """
+    Prepares an api target as an entry point for API calls on a specified node.
+
+    :param nodeName: The node reference you would like the api target point to be created for
+    :return: The api target point for the specified node
+    """
+
     logger.info('Preparing api call')
     host = world.machine['nodes'][nodeName]['host']
     port = world.machine['nodes'][nodeName]['ports']['api']
@@ -105,6 +112,15 @@ def prepare_options(args,optionList):
             optionList[key] = value
 
 def fetch_call(apiCall,api,options):
+    """
+    Fetch the provided API call target using the provided arguments and return the response.
+
+    :param apiCall: The API call you would like to fetch
+    :param api: A provided node api target for making the call
+    :param options: The arguments needed for the API call
+    :return: Response for API Call
+    """
+
     callList = {
         'getNodeInfo': api.get_node_info,
         'getNeighbors': api.get_neighbors,

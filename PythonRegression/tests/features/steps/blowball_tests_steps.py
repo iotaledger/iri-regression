@@ -11,6 +11,7 @@ world.test_vars = {}
 
 @step(r'the returned GTTA transactions will be compared with the milestones')
 def compare_gtta_with_milestones(step):
+    """Compares the getTransactionsToApprove response values with the collected milestone issuing address"""
     logger.info("Compare GTTA response with milestones")
     gtta_responses = tests.fetch_response('getTransactionsToApprove')
     find_transactions_responses = tests.fetch_response('findTransactions')
@@ -55,15 +56,35 @@ def compare_gtta_with_milestones(step):
 
 @step(r'less than (\d+) percent of the returned transactions should reference milestones')
 def less_than_max_percent(step,max_percent):
+    """
+    Checks the number of returned milestones and ensures that the total number of milestones returned is below a
+    given threshold
+    """
     percentage = (float(world.test_vars['milestone_count'])/(world.config['max'] * 2)) * 100.00
     logger.info(str(percentage) + "% milestones")
     assert percentage < float(max_percent)
     
-    
-    
+
         
 def compare_responses(value,milestone_list,transaction_list,transaction_counter_list,
                       milestone_transaction_list,milestone_transaction_count):
+    """
+    A comparison method to check a given response value with a list of collected milestones. It checks if the value is
+    present in the milestone list. If it is present in the milestone list, it then determines if this is the first time
+    this transaction has been returned, and adjusts the milestone_transaction_list and milestone_transaction_count lists
+    accordingly. The overall milestone count is incremented each time a value is found in the milestone list. If the
+    value is not present in the milestone list, then it does the same check for the transaction_list and
+    transaction_counter_list. These lists will be used later for logging the responses and the number of times a given
+    response has been returned.
+
+    :param value: The value you would like to check against the lists
+    :param milestone_list: The list of found milestones you will compare the value to
+    :param transaction_list: A list of recorded transaction values that have been found
+    :param transaction_counter_list: A list of the number of times a value has been returned
+    :param milestone_transaction_list: A list of returned milestone values that have been found
+    :param milestone_transaction_count: A list of the number of times a milestone value has been returned
+    """
+
     if value in milestone_list:
         if value in milestone_transaction_list:
             milestone_transaction_count[milestone_transaction_list.index(value)] += 1

@@ -82,7 +82,7 @@ def threaded_call(step,apiCall,node):
         world.config['future_results'] = {}
     world.config['future_results'][apiCall] = future_results
 
-
+    
 @step(r'we wait "(\d+)" second/seconds')
 def wait_for_step(step,time):
     logger.info('Waiting for {} seconds'.format(time))
@@ -97,7 +97,6 @@ def compare_thread_return(step,apiCall):
 
     for result in future_results:
         response_list = pool.fetch_results(result,1)
-
         # Exclude duration from response list
         if 'duration' in response_list:
             del response_list['duration']
@@ -114,13 +113,13 @@ def compare_thread_return(step,apiCall):
             response_key = response_keys[count]
             response_value = response_list[response_key]
             expected_value = expected_values[response_key]
-
             assert response_value == expected_value, \
                 'Returned: {} does not match the expected value: {}'.format(response_value,expected_value)
 
 
 @step(r'"([^"]*)" is called (\d+) times on "([^"]*)" with:')
 def spam_call(step,apiCall,numTests,node):
+    """Spams getTransactionsToApprove calls a number of times among available nodes in a cluster"""
     start = time()
     world.config['apiCall'] = apiCall
     arg_list = step.hashes
