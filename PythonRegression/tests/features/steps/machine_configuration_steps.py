@@ -26,5 +26,10 @@ def configuration(feature):
 
 @after.each_example
 def deconfiguration(scenario,outline,steps):
-    world.config = {}
-    world.responses = {}
+
+    machine = world.machine
+    for key in world.__dict__:
+        setattr(world,key,{})
+
+    world.machine = machine
+

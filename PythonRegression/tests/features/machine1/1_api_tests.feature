@@ -40,7 +40,12 @@ Feature: Test API calls on Machine 1
 
 
 	Scenario: GetNeighbors is called
-		Given "getNeighbors" is called on "nodeA" with:
+
+	    Given "addNeighbors" is called on "nodeA" with:
+		|keys       |values				|type           |
+		|uris       |nodeB				|nodeAddress    |
+
+		And "getNeighbors" is called on "nodeA" with:
 		|keys       |values				|type   	|
 
 		Then a response with the following is returned:
@@ -169,7 +174,8 @@ Feature: Test API calls on Machine 1
 		|branch_transaction     |TEST_HASH		|staticValue    |
 		|min_weight_magnitude   |50			|int            |
 
-		And "interruptAttachingToTangle" is called in parallel on "nodeA" with:
+		And we wait "1" second/seconds
+		Then "interruptAttachingToTangle" is called in parallel on "nodeA" with:
 		|keys                   |values				|type           |
 
         # Do not include duration in the return expectations as it will always return a variable amount

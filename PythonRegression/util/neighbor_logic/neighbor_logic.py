@@ -26,6 +26,7 @@ def check_if_neighbors(api,neighbors,expectedNeighbor):
         udp_address = "udp://" + expectedNeighbor
         logger.info('Adding {} as neighbor'.format(udp_address))
         api.add_neighbors([udp_address.decode()])
+        logger.info('{} added as neighbor'.format(udp_address))
 
 
 

@@ -9,13 +9,12 @@ tests = api_test_logic
 
 world.test_vars = {}
 
-
 @step(r'the returned GTTA transactions will be compared with the milestones')
 def compare_gtta_with_milestones(step):
     logger.info("Compare GTTA response with milestones")
     gtta_responses = tests.fetch_response('getTransactionsToApprove')
     find_transactions_responses = tests.fetch_response('findTransactions')
-    milestones = list(find_transactions_responses['hashes'])
+    milestones = list(find_transactions_responses[world.config['nodeId']]['hashes'])
     node = world.config['nodeId']
     world.config['max'] = len(gtta_responses[node])
     

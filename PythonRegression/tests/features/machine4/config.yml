@@ -1,6 +1,6 @@
 defaults: &db_1
-  db: https://s3.eu-central-1.amazonaws.com/iotaledger-dbfiles/dev/Blowball_Tests_db.tar
-  db_checksum: 0e9017ee8e6bef601dd68f08200d4ff2290701d0e903da518097620fa8adb092
+  db: https://s3.eu-central-1.amazonaws.com/iotaledger-dbfiles/dev/Stitching_tests_db.tar
+  db_checksum: ac987dc8e61e37d6420e78da18c4cf94671f51e8014b4dd593f36bbd4fb0cfc1
   iri_args: ['--testnet-coordinator',
   'EFPNKGPCBXXXLIBYFGIGYBYTFFPIOQVNNVVWTTIYZO9NFREQGVGDQQHUUQ9CLWAEMXVDFSSMOTGAHVIBH',
   '--milestone-keys',
@@ -11,6 +11,7 @@ defaults: &db_1
   '--testnet'
   ]
 
+  
 seeds: # For internal use by the regression system. 
     - SEED
     - SIID
@@ -21,16 +22,3 @@ nodes:
   
   nodeB:
     <<: *db_1
-
-  nodeC:
-    <<: *db_1
-
-  nodeD:
-    <<: *db_1
-
-  nodeE:
-    <<: *db_1
-
-  nodeF:
-    <<: *db_1
-
