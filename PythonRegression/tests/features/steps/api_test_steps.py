@@ -1,10 +1,6 @@
 from aloe import *
-from iota import Transaction
-
-
 from util import static_vals
 from util.test_logic import api_test_logic as api_utils
-from util.transaction_bundle_logic import transaction_logic as transactions
 from util.threading_logic import pool_logic as pool
 from util.neighbor_logic import neighbor_logic as neighbors
 from util.response_logic import response_handling as responses
@@ -39,8 +35,8 @@ def api_method_is_called(step,apiCall,nodeName):
             :type staticList: Same as staticValue, except it places the results into a list
             :type responseValue: Identifier for api call response value
             :type responseList: Same as responseValue, ecept it places the results into a list
+            :type configValue: Identifier for a value stored in world.config
             :type bool: Bool argument, returns True or False
-
     """
     logger.info('%s is called on %s',apiCall,nodeName)
     world.config['apiCall'] = apiCall
@@ -117,10 +113,12 @@ def compare_thread_return(step,apiCall):
     future_results = world.config['future_results'][apiCall]
 
     for result in future_results:
-        response_list = pool.fetch_results(result,1)
+        response_list = pool.fetch_results(result, 5)
         # Exclude duration from response list
         if 'duration' in response_list:
             del response_list['duration']
+        if 'info' in response_list:
+            del response_list['info']
         response_keys = response_list.keys()
 
         expected_values = {}
@@ -182,73 +180,6 @@ def spam_call(step,apiCall,numTests,node):
     logger.info('Time spent on loop: {}'.format(time_spent))
 
 
-###
-# Transaction Generator
-@step(r'a transaction is generated and attached on "([^"]+)" with:')
-def generate_transaction_and_attach(step,node):
-    """
-    Creates a zero value transaction with the specified arguments.
-
-    :param node: The node that the transaction will be generated on.
-    :param step.hashes: A gherkin table present in the feature file specifying the
-                        arguments and the associated type.
-    """
-
-    arg_list = step.hashes
-    world.config['nodeId'] = node
-    world.config['apiCall'] = 'attachToTangle'
-
-    options = {}
-    api = api_utils.prepare_api_call(node)
-    api_utils.prepare_options(arg_list, options)
-
-    transaction_args = {}
-    for key in options:
-        transaction_args[key] = options.get(key)
-    api_utils.prepare_transaction_arguments(transaction_args)
-
-    transaction = transactions.create_and_attach_transaction(api,transaction_args)
-    api.broadcast_and_store(transaction.get('trytes'))
-
-    assert len(transaction['trytes']) > 0
-    world.responses['attachToTangle'] = {}
-    world.responses['attachToTangle'][node] = transaction
-    logger.info('Transaction Sent')
-
-    setattr(static_vals, "TEST_STORE_TRANSACTION", transaction.get('trytes'))
-
-
-@step(r'an inconsistent transaction is generated on "([^"]+)"')
-def create_inconsistent_transaction(step,node):
-    """
-    Creates an inconsistent transaction by generating a zero value transaction that references
-    a non-existent transaction as its branch and trunk, thus not connecting with any other part
-    of the tangle.
-
-    :param node: The node that the transaction will be generated on.
-    """
-    world.config['nodeId'] = node
-    api = api_utils.prepare_api_call(node)
-    trunk = getattr(static_vals,"NULL_HASH")
-    branch = trunk
-    trytes = getattr(static_vals,"EMPTY_TRANSACTION_TRYTES")
-
-    argument_list = {'trunk_transaction': trunk, 'branch_transaction': branch,
-                     'trytes': [trytes], 'min_weight_magnitude': 14}
-
-    transaction = transactions.attach_store_and_broadcast(api,argument_list)
-    transaction_trytes = transaction.get('trytes')
-    transaction_hash = Transaction.from_tryte_string(transaction_trytes[0])
-
-    logger.info(transaction_hash.hash)
-
-    if 'inconsistentTransactions' not in world.responses:
-        world.responses['inconsistentTransactions'] = {}
-
-    world.responses['inconsistentTransactions'][node] = transaction_hash.hash
-
-    if 'inconsistentTransactions' not in world.responses:
-        world.responses['inconsistentTransactions'] = {}
 
 
 ###
@@ -284,7 +215,7 @@ def make_neighbors(step,node1,node2):
     neighbors.check_if_neighbors(neighbor_info[node2]['api'],
                                  neighbor_info[node2]['node_neighbors'], neighbor_info[node1]['address'])
 
-
+'''
 def check_responses_for_call(apiCall):
     if len(world.responses[apiCall]) > 0:
         return True
@@ -306,5 +237,5 @@ def fetch_config(key):
 
 def fetch_response(apiCall):
     return world.responses[apiCall]
-
+'''
 

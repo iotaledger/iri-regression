@@ -31,9 +31,11 @@ def check_responses_for_call(apiCall):
         return True
     else:
         return False
-    
+
+
 def fetch_response(apiCall):
     return world.responses[apiCall]
+
 
 def place_response(apiCall,node,response):
     world.responses[apiCall][node] = response
