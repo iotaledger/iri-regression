@@ -145,6 +145,28 @@ def fetch_call(apiCall,api,options):
     return response
 
 
+def assign_nodes(node,node_list):
+    """
+    This method determines if the node specified is equal to "all nodes". If it is,
+    it stores all available nodes in the node list. If not, it stores only the
+    specified node. It also updates the current world.config['nodeId'] to either
+    the specified node, or the first node in the world.machine variable.
+
+    :param node: The specified node (or "all nodes")
+    :param node_list: The list to store the usable nodes
+    """
+    if node == 'all nodes':
+        for current_node in world.machine['nodes']:
+            api = prepare_api_call(current_node)
+            node_list[current_node] = api
+        node = next(iter(world.machine['nodes']))
+        world.config['nodeId'] = node
+    else:
+        api = prepare_api_call(node)
+        node_list[node] = api
+        world.config['nodeId'] = node
+
+
 def make_api_call(api,options,q):
     responses = q.get()
     config = q.get()
@@ -156,6 +178,7 @@ def make_api_call(api,options,q):
     responses[apiCall] = {}
     responses[apiCall][node] = response
     return response
+
 
 def check_if_empty(value):
     if len(value) == 0:

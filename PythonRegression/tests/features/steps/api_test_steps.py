@@ -1,5 +1,5 @@
 from aloe import *
-from iota import ProposedTransaction,Address,Tag,TryteString,ProposedBundle,Transaction
+from iota import Transaction
 
 
 from util import static_vals
@@ -160,7 +160,7 @@ def spam_call(step,apiCall,numTests,node):
     api_utils.prepare_options(arg_list, options)
 
     # See if call will be made on one node or all
-    assign_nodes(node,nodes)
+    api_utils.assign_nodes(node,nodes)
     node = world.config['nodeId']
 
     def run_call(node,api):
@@ -307,23 +307,4 @@ def fetch_config(key):
 def fetch_response(apiCall):
     return world.responses[apiCall]
 
-def assign_nodes(node,node_list):
-    """
-    This method determines if the node specified is equal to "all nodes". If it is,
-    it stores all available nodes in the node list. If not, it stores only the
-    specified node. It also updates the current world.config['nodeId'] to either
-    the specified node, or the first node in the world.machine variable.
 
-    :param node: The specified node (or "all nodes")
-    :param node_list: The list to store the usable nodes
-    """
-    if node == 'all nodes':
-        for current_node in world.machine['nodes']:
-            api = api_utils.prepare_api_call(current_node)
-            node_list[current_node] = api
-        node = next(iter(world.machine['nodes']))
-        world.config['nodeId'] = node
-    else:
-        api = api_utils.prepare_api_call(node)
-        node_list[node] = api
-        world.config['nodeId'] = node

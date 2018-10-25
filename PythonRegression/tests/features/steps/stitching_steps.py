@@ -1,23 +1,18 @@
 from aloe import step, world
 from util.test_logic import api_test_logic as tests
-from util.transaction_utils import transaction_logic as transactions
+from util.transaction_bundle_logic import transaction_logic as transactions
 from util import static_vals as static
 import threading
-import random
 
 import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-world.config = {}
-world.responses = {}
-
-#TODO: Create generic errors file for all exception templating
 TIMEOUT_ERROR = "Thread has not completed, request has timed out"
 
-side_tangle_address = b'SIDE9TANGLE9999999999999999999999999999999999999999999999999999999999999999999999'
-stitching_addresss = b'STITCHING9TRANSACTIONS99999999999999999999999999999999999999999999999999999999999'
-referencing_address = b'REFERENCES9STITCHING9TRANSACTION9999999999999999999999999999999999999999999999999'
+side_tangle_address = getattr(static, 'SIDE_TANGLE_ADDRESS')
+stitching_addresss = getattr(static, 'STITCHING_ADDRESS')
+referencing_address = getattr(static, 'REFERENCING_ADDRESS')
 
 @step(r'a stitching transaction is issued on "([^"]*)" with the tag "([^"]*)"')
 def issue_stitching_transaction(step,node,tag):
