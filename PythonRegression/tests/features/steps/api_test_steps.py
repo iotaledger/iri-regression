@@ -7,6 +7,7 @@ from util.test_logic import api_test_logic as api_utils
 from util.transaction_bundle_logic import transaction_logic as transactions
 from util.threading_logic import pool_logic as pool
 from util.neighbor_logic import neighbor_logic as neighbors
+from util.response_logic import response_handling as responses
 from time import sleep, time
 
 import logging
@@ -60,6 +61,15 @@ def api_method_is_called(step,apiCall,nodeName):
 # This method is identical to the method above, but creates a new thread
 @step(r'"([^"]+)" is called in parallel on "([^"]+)" with:')
 def threaded_call(step,apiCall,node):
+    """
+    Makes an asynchronous API call on the specified node and stores the future result reference in the
+    world.config variable.
+
+    :param apiCall: The API call you would like to make.
+    :param node: The identifier for the node you would like to run the call on.
+    :param step.hashes: A gherkin table present in the feature file specifying the
+                        arguments and the associated type.
+    """
     logger.info("Creating thread for {}".format(apiCall))
     world.config['apiCall'] = apiCall
     world.config['nodeId'] = node
@@ -85,13 +95,24 @@ def threaded_call(step,apiCall,node):
     
 @step(r'we wait "(\d+)" second/seconds')
 def wait_for_step(step,time):
+    """
+    Wait a specified number of seconds before continuing.
+
+    :param time: The number of seconds you would like the step to wait for.
+    """
     logger.info('Waiting for {} seconds'.format(time))
     sleep(int(time))
 
 
 @step(r'the "([^"]+)" parallel call should return with:')
 def compare_thread_return(step,apiCall):
-    """Prepare response list for comparison"""
+    """
+    Prepare response list for comparison.
+
+    :param apiCall: The API call you would like to find a response for
+    :param step.hashes: A gherkin table present in the feature file specifying the
+                        values and the associated type to be found in the response.
+    """
     logger.debug(world.responses)
     future_results = world.config['future_results'][apiCall]
 
@@ -119,49 +140,40 @@ def compare_thread_return(step,apiCall):
 
 @step(r'"([^"]*)" is called (\d+) times on "([^"]*)" with:')
 def spam_call(step,apiCall,numTests,node):
-    """Spams getTransactionsToApprove calls a number of times among available nodes in a cluster"""
+    """
+    Spams an API call a number of times among the specified nodes in a cluster
+
+    :param apiCall: The API call you would like to make
+    :param numTests: The number of iterations you would like to run
+    :param node: The node that the call will be sent to. This can be set to 'all nodes' and it will run the test
+                 on all the available nodes.
+    :param step.hashes: A gherkin table present in the feature file specifying the
+                        arguments and the associated type.
+    """
     start = time()
     world.config['apiCall'] = apiCall
     arg_list = step.hashes
     nodes = {}
     responseVal = []
 
-    api2 = api_utils.prepare_api_call('nodeA')
-    logger.info(api2.get_node_info())
-
     options = {}
     api_utils.prepare_options(arg_list, options)
 
     # See if call will be made on one node or all
-    if node == 'all nodes':
-        for current_node in world.machine['nodes']:
-            api = api_utils.prepare_api_call(current_node)
-            nodes[current_node] = api
-        node = next(iter(world.machine['nodes']))
-        world.config['nodeId'] = node
-    else:
-        api = api_utils.prepare_api_call(node)
-        nodes[node] = api
-        world.config['nodeId'] = node
-
+    assign_nodes(node,nodes)
+    node = world.config['nodeId']
 
     def run_call(node,api):
         logger.debug('Running Thread on {}'.format(node))
         response = api.get_transactions_to_approve(depth=3)
         return response
 
-
-    args = (nodes)
+    args = nodes
+ #   args = (nodes)
     future_results = pool.start_pool(run_call,numTests,args)
 
-    instance = 0
-    for result in future_results:
-        instance += 1
-        if instance % 25 == 0:
-            logger.info('Fetching result: {}/{}'.format(instance,numTests))
-        response = pool.fetch_results(result,30)
-        responseVal.append(response)
-        
+    responses.fetch_future_results(future_results,numTests,responseVal)
+
     world.responses[apiCall] = {}
     world.responses[apiCall][node] = responseVal
 
@@ -174,6 +186,14 @@ def spam_call(step,apiCall,numTests,node):
 # Transaction Generator
 @step(r'a transaction is generated and attached on "([^"]+)" with:')
 def generate_transaction_and_attach(step,node):
+    """
+    Creates a zero value transaction with the specified arguments.
+
+    :param node: The node that the transaction will be generated on.
+    :param step.hashes: A gherkin table present in the feature file specifying the
+                        arguments and the associated type.
+    """
+
     arg_list = step.hashes
     world.config['nodeId'] = node
     world.config['apiCall'] = 'attachToTangle'
@@ -204,6 +224,8 @@ def create_inconsistent_transaction(step,node):
     Creates an inconsistent transaction by generating a zero value transaction that references
     a non-existent transaction as its branch and trunk, thus not connecting with any other part
     of the tangle.
+
+    :param node: The node that the transaction will be generated on.
     """
     world.config['nodeId'] = node
     api = api_utils.prepare_api_call(node)
@@ -233,6 +255,12 @@ def create_inconsistent_transaction(step,node):
 # Test transactions
 @step(r'"([^"]+)" and "([^"]+)" are neighbors')
 def make_neighbors(step,node1,node2):
+    """
+    Ensures that the specified nodes are neighbored with one another.
+
+    :param node1: The identifier for the first node (ie nodeA)
+    :param node2: The identifier for the second node (ie nodeB)
+    """
     neighbor_candidates = [node1,node2]
     neighbor_info = {}
 
@@ -278,3 +306,24 @@ def fetch_config(key):
 
 def fetch_response(apiCall):
     return world.responses[apiCall]
+
+def assign_nodes(node,node_list):
+    """
+    This method determines if the node specified is equal to "all nodes". If it is,
+    it stores all available nodes in the node list. If not, it stores only the
+    specified node. It also updates the current world.config['nodeId'] to either
+    the specified node, or the first node in the world.machine variable.
+
+    :param node: The specified node (or "all nodes")
+    :param node_list: The list to store the usable nodes
+    """
+    if node == 'all nodes':
+        for current_node in world.machine['nodes']:
+            api = api_utils.prepare_api_call(current_node)
+            node_list[current_node] = api
+        node = next(iter(world.machine['nodes']))
+        world.config['nodeId'] = node
+    else:
+        api = api_utils.prepare_api_call(node)
+        node_list[node] = api
+        world.config['nodeId'] = node

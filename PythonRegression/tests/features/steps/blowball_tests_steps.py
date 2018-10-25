@@ -15,8 +15,8 @@ def compare_gtta_with_milestones(step):
     logger.info("Compare GTTA response with milestones")
     gtta_responses = tests.fetch_response('getTransactionsToApprove')
     find_transactions_responses = tests.fetch_response('findTransactions')
-    milestones = list(find_transactions_responses[world.config['nodeId']]['hashes'])
     node = world.config['nodeId']
+    milestones = list(find_transactions_responses[node]['hashes'])
     world.config['max'] = len(gtta_responses[node])
     
     transactions = []
