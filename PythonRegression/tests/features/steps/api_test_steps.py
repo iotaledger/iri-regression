@@ -17,13 +17,13 @@ world.responses = {}
 
 
 @step(r'"([^"]+)" is called on "([^"]+)" with:')
-def api_method_is_called(step,apiCall,nodeName):
+def api_method_is_called(step, api_call, node_name):
     """
     This is the general api calling function. There are 3 inputs
 
-    :param apiCall:     The api call that will be requested
-    :param nodeName:    The name identifying the node you would like to make this request on
-    :param table:       A gherkin table outlining any arguments needed for the call
+    :param api_call:     The api call that will be requested
+    :param node_name:    The name identifying the node you would like to make this request on
+    :param step.hashes:  A gherkin table outlining any arguments needed for the call
                         (See tests/features/machine1/1_api_tests.feature for examples)
 
         The table parameter is unique in that there are several input types available depending on the call
@@ -38,36 +38,36 @@ def api_method_is_called(step,apiCall,nodeName):
             :type configValue: Identifier for a value stored in world.config
             :type bool: Bool argument, returns True or False
     """
-    logger.info('%s is called on %s',apiCall,nodeName)
-    world.config['apiCall'] = apiCall
-    world.config['nodeId'] = nodeName
+    logger.info('%s is called on %s', api_call, node_name)
+    world.config['apiCall'] = api_call
+    world.config['nodeId'] = node_name
     arg_list = step.hashes
 
     options = {}
     api_utils.prepare_options(arg_list, options)
 
-    api = api_utils.prepare_api_call(nodeName)
-    response = api_utils.fetch_call(apiCall, api, options)
+    api = api_utils.prepare_api_call(node_name)
+    response = api_utils.fetch_call(api_call, api, options)
 
     assert type(response) is dict, 'There may be something wrong with the response format: {}'.format(response)
-    world.responses[apiCall] = {}
-    world.responses[apiCall][nodeName] = response
+    world.responses[api_call] = {}
+    world.responses[api_call][node_name] = response
 
 
 # This method is identical to the method above, but creates a new thread
 @step(r'"([^"]+)" is called in parallel on "([^"]+)" with:')
-def threaded_call(step,apiCall,node):
+def threaded_call(step, api_call, node):
     """
     Makes an asynchronous API call on the specified node and stores the future result reference in the
     world.config variable.
 
-    :param apiCall: The API call you would like to make.
+    :param api_call: The API call you would like to make.
     :param node: The identifier for the node you would like to run the call on.
     :param step.hashes: A gherkin table present in the feature file specifying the
                         arguments and the associated type.
     """
-    logger.info("Creating thread for {}".format(apiCall))
-    world.config['apiCall'] = apiCall
+    logger.info("Creating thread for {}".format(api_call))
+    world.config['apiCall'] = api_call
     world.config['nodeId'] = node
     arg_list = step.hashes
 
@@ -76,21 +76,21 @@ def threaded_call(step,apiCall,node):
     api = api_utils.prepare_api_call(node)
 
     def make_call(node, arg_list):
-        response = api_utils.fetch_call(apiCall, arg_list['api'], arg_list['options'])
-        arg_list['responses'][apiCall] = {}
-        arg_list['responses'][apiCall][node] = response
+        response = api_utils.fetch_call(api_call, arg_list['api'], arg_list['options'])
+        arg_list['responses'][api_call] = {}
+        arg_list['responses'][api_call][node] = response
         return response
 
-    args = {node: {'api': api,'options': options,'responses': world.responses}}
-    future_results = pool.start_pool(make_call,1,args)
+    args = {node: {'api': api, 'options': options, 'responses': world.responses}}
+    future_results = pool.start_pool(make_call, 1, args)
 
     if 'future_results' not in world.config:
         world.config['future_results'] = {}
-    world.config['future_results'][apiCall] = future_results
+    world.config['future_results'][api_call] = future_results
 
     
 @step(r'we wait "(\d+)" second/seconds')
-def wait_for_step(step,time):
+def wait_for_step(step, time):
     """
     Wait a specified number of seconds before continuing.
 
@@ -101,16 +101,16 @@ def wait_for_step(step,time):
 
 
 @step(r'the "([^"]+)" parallel call should return with:')
-def compare_thread_return(step,apiCall):
+def compare_thread_return(step, api_call):
     """
     Prepare response list for comparison.
 
-    :param apiCall: The API call you would like to find a response for
+    :param api_call: The API call you would like to find a response for
     :param step.hashes: A gherkin table present in the feature file specifying the
                         values and the associated type to be found in the response.
     """
     logger.debug(world.responses)
-    future_results = world.config['future_results'][apiCall]
+    future_results = world.config['future_results'][api_call]
 
     for result in future_results:
         response_list = pool.fetch_results(result, 5)
@@ -126,73 +126,69 @@ def compare_thread_return(step,apiCall):
         keys = expected_values.keys()
 
         # Confirm that the lists are of equal length before comparing
-        assert len(keys) == len(response_keys), 'Response: {} does not contain the same number of arguments: {}'.format(keys,response_keys)
+        assert len(keys) == len(response_keys), \
+            'Response: {} does not contain the same number of arguments: {}'.format(keys, response_keys)
 
         for count in range(len(keys)):
             response_key = response_keys[count]
             response_value = response_list[response_key]
             expected_value = expected_values[response_key]
             assert response_value == expected_value, \
-                'Returned: {} does not match the expected value: {}'.format(response_value,expected_value)
+                'Returned: {} does not match the expected value: {}'.format(response_value, expected_value)
 
 
 @step(r'"([^"]*)" is called (\d+) times on "([^"]*)" with:')
-def spam_call(step,apiCall,numTests,node):
+def spam_call(step, api_call, num_tests, node):
     """
     Spams an API call a number of times among the specified nodes in a cluster
 
-    :param apiCall: The API call you would like to make
-    :param numTests: The number of iterations you would like to run
+    :param api_call: The API call you would like to make
+    :param num_tests: The number of iterations you would like to run
     :param node: The node that the call will be sent to. This can be set to 'all nodes' and it will run the test
                  on all the available nodes.
     :param step.hashes: A gherkin table present in the feature file specifying the
                         arguments and the associated type.
     """
     start = time()
-    world.config['apiCall'] = apiCall
+    world.config['apiCall'] = api_call
     arg_list = step.hashes
     nodes = {}
-    responseVal = []
+    response_val = []
 
     options = {}
     api_utils.prepare_options(arg_list, options)
 
     # See if call will be made on one node or all
-    api_utils.assign_nodes(node,nodes)
+    api_utils.assign_nodes(node, nodes)
     node = world.config['nodeId']
 
-    def run_call(node,api):
+    def run_call(node, api):
         logger.debug('Running Thread on {}'.format(node))
         response = api.get_transactions_to_approve(depth=3)
         return response
 
     args = nodes
- #   args = (nodes)
-    future_results = pool.start_pool(run_call,numTests,args)
+    future_results = pool.start_pool(run_call, num_tests, args)
 
-    responses.fetch_future_results(future_results,numTests,responseVal)
+    responses.fetch_future_results(future_results, num_tests, response_val)
 
-    world.responses[apiCall] = {}
-    world.responses[apiCall][node] = responseVal
+    world.responses[api_call] = {}
+    world.responses[api_call][node] = response_val
 
     end = time()
     time_spent = end - start
     logger.info('Time spent on loop: {}'.format(time_spent))
 
 
-
-
-###
-# Test transactions
 @step(r'"([^"]+)" and "([^"]+)" are neighbors')
-def make_neighbors(step,node1,node2):
+def make_neighbors(step, node1, node2):
     """
     Ensures that the specified nodes are neighbored with one another.
 
     :param node1: The identifier for the first node (ie nodeA)
     :param node2: The identifier for the second node (ie nodeB)
     """
-    neighbor_candidates = [node1,node2]
+    neighbor_candidates = [node1, node2]
     neighbor_info = {}
 
     for node in range(len(neighbor_candidates)):
@@ -215,27 +211,5 @@ def make_neighbors(step,node1,node2):
     neighbors.check_if_neighbors(neighbor_info[node2]['api'],
                                  neighbor_info[node2]['node_neighbors'], neighbor_info[node1]['address'])
 
-'''
-def check_responses_for_call(apiCall):
-    if len(world.responses[apiCall]) > 0:
-        return True
-    else:
-        return False
 
-
-def fill_response(apiCall,response):
-    world.responses[apiCall] = response
-
-
-def fill_config(key,value):
-    world.config[key] = value
-
-
-def fetch_config(key):
-    return world.config[key]
-
-
-def fetch_response(apiCall):
-    return world.responses[apiCall]
-'''
 

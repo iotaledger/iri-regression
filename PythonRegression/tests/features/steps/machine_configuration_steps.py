@@ -2,7 +2,7 @@ from aloe import before,world, after
 from yaml import load, Loader
 
 
-#Configuration
+# Configuration
 @before.each_feature
 def configuration(feature):
     machine = []   
@@ -24,12 +24,13 @@ def configuration(feature):
     world.config = {}
     world.responses = {}
 
+
 @after.each_example
-def deconfiguration(scenario,outline,steps):
+def deconfiguration(scenario, outline, steps):
 
     machine = world.machine
     for key in world.__dict__:
-        setattr(world,key,{})
+        setattr(world, key, {})
 
     world.machine = machine
 

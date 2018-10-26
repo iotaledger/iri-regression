@@ -9,8 +9,9 @@ import logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 @step(r'a transaction is generated and attached on "([^"]+)" with:')
-def generate_transaction_and_attach(step,node):
+def generate_transaction_and_attach(step, node):
     """
     Creates a zero value transaction with the specified arguments.
 
@@ -31,7 +32,7 @@ def generate_transaction_and_attach(step,node):
         transaction_args[key] = options.get(key)
     api_utils.prepare_transaction_arguments(transaction_args)
 
-    transaction = transactions.create_and_attach_transaction(api,transaction_args)
+    transaction = transactions.create_and_attach_transaction(api, transaction_args)
     api.broadcast_and_store(transaction.get('trytes'))
 
     assert len(transaction['trytes']) > 0
@@ -43,7 +44,7 @@ def generate_transaction_and_attach(step,node):
 
 
 @step(r'an inconsistent transaction is generated on "([^"]+)"')
-def create_inconsistent_transaction(step,node):
+def create_inconsistent_transaction(step, node):
     """
     Creates an inconsistent transaction by generating a zero value transaction that references
     a non-existent transaction as its branch and trunk, thus not connecting with any other part
@@ -60,7 +61,7 @@ def create_inconsistent_transaction(step,node):
     argument_list = {'trunk_transaction': trunk, 'branch_transaction': branch,
                      'trytes': [trytes], 'min_weight_magnitude': 14}
 
-    transaction = transactions.attach_store_and_broadcast(api,argument_list)
+    transaction = transactions.attach_store_and_broadcast(api, argument_list)
     transaction_trytes = transaction.get('trytes')
     transaction_hash = Transaction.from_tryte_string(transaction_trytes[0])
 
@@ -72,7 +73,7 @@ def create_inconsistent_transaction(step,node):
 
 
 @step(r'a stitching transaction is issued on "([^"]*)" with the tag "([^"]*)"')
-def issue_stitching_transaction(step,node,tag):
+def issue_stitching_transaction(step, node, tag):
     world.config['nodeId'] = node
     world.config['stitchTag'] = tag
 
@@ -83,17 +84,17 @@ def issue_stitching_transaction(step,node,tag):
 
     trunk = side_tangle_transaction
     branch = gtta_transactions['branchTransaction']
-    stitching_address = getattr(static,"STITCHING_ADDRESS")
+    stitching_address = getattr(static, "STITCHING_ADDRESS")
 
     logger.debug('Trunk: ' + str(trunk))
     logger.debug('Branch: ' + str(branch))
 
-    bundle = transactions.create_transaction_bundle(stitching_address,tag,0)
+    bundle = transactions.create_transaction_bundle(stitching_address, tag, 0)
     trytes = bundle[0].as_tryte_string()
     sent_transaction = api.attach_to_tangle(trunk, branch, [trytes], 14)
     api.broadcast_and_store(sent_transaction.get('trytes'))
 
-    #Finds transaction hash and stores it in world
+    # Finds transaction hash and stores it in world
     bundlehash = api.find_transactions(bundles=[bundle.hash])
     if 'previousTransaction' not in world.responses:
         world.responses['previousTransaction'] = {}
@@ -104,26 +105,26 @@ def issue_stitching_transaction(step,node,tag):
 def reference_stitch_transaction(step):
     node = world.config['nodeId']
     stitch = world.responses['previousTransaction'][node]
-    referencing_address = getattr(static,"REFERENCING_ADDRESS")
+    referencing_address = getattr(static, "REFERENCING_ADDRESS")
 
     api = api_utils.prepare_api_call(node)
 
-    transaction_bundle = transactions.create_transaction_bundle(referencing_address,'REFERENCE9TAG',0)
+    transaction_bundle = transactions.create_transaction_bundle(referencing_address, 'REFERENCE9TAG', 0)
 
-    def transactions_to_approve(node,arg_list):
-        response = api_utils.fetch_call('getTransactionsToApprove',arg_list['api'],{'depth':3})
+    def transactions_to_approve(node, arg_list):
+        response = api_utils.fetch_call('getTransactionsToApprove', arg_list['api'], {'depth': 3})
         arg_list['responses']['getTransactionsToApprove'][node] = response
         return response
 
-    gtta_results = pool.start_pool(transactions_to_approve,1,{node:{'api': api,'responses': world.responses}})
-    branch = pool.fetch_results(gtta_results[0],30)
-    options = {'trunk': stitch,'branch': branch, 'trytes': transaction_bundle.as_tryte_strings(),
+    gtta_results = pool.start_pool(transactions_to_approve, 1, {node: {'api': api, 'responses': world.responses}})
+    branch = pool.fetch_results(gtta_results[0], 30)
+    options = {'trunk': stitch, 'branch': branch, 'trytes': transaction_bundle.as_tryte_strings(),
                'min_weight_magnitude': 9}
 
     def make_transaction(node, arg_list):
-        response = transactions.attach_store_and_broadcast(arg_list['api'],options)
+        response = transactions.attach_store_and_broadcast(arg_list['api'], options)
         arg_list['responses']['attachToTangle'][node] = response
         return response
 
-    transaction_results = pool.start_pool(make_transaction,1, {node: {'api': api, 'responses': world.responses}})
-    pool.fetch_results(transaction_results[0],30)
+    transaction_results = pool.start_pool(make_transaction, 1, {node: {'api': api, 'responses': world.responses}})
+    pool.fetch_results(transaction_results[0], 30)

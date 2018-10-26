@@ -1,11 +1,10 @@
 from multiprocessing.dummy import Pool
-import multiprocessing as mp
 import logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 
-def start_pool(function,iterations,args):
+def start_pool(function, iterations, args):
     """
     Starts a pool to run the given function a given number of times.
 
@@ -24,8 +23,8 @@ def start_pool(function,iterations,args):
         run_list = (node for node in args if iteration < int(iterations))
         for node in run_list:
             iteration += 1
-            arg_list = (node,args[node])
-            future_results.append(pool.apply_async(function,arg_list))
+            arg_list = (node, args[node])
+            future_results.append(pool.apply_async(function, arg_list))
     return future_results
 
 

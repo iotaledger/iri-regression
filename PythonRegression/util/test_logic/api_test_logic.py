@@ -7,75 +7,74 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-
-def prepare_api_call(nodeName):
+def prepare_api_call(node_name):
     """
     Prepares an api target as an entry point for API calls on a specified node.
 
-    :param nodeName: The node reference you would like the api target point to be created for
+    :param node_name: The node reference you would like the api target point to be created for
     :return: The api target point for the specified node
     """
 
     logger.info('Preparing api call')
-    host = world.machine['nodes'][nodeName]['host']
-    port = world.machine['nodes'][nodeName]['ports']['api']
-    address ="http://"+ host + ":" + str(port)
+    host = world.machine['nodes'][node_name]['host']
+    port = world.machine['nodes'][node_name]['ports']['api']
+    address = "http://" + host + ":" + str(port)
     api = Iota(address)
-    logger.info('API call prepared for %s',address)
+    logger.info('API call prepared for %s', address)
     return api
 
 
-def check_responses_for_call(apiCall):
+def check_responses_for_call(api_call):
     steps = import_steps()
-    if len(steps.responses[apiCall]) > 0:
+    if len(steps.responses[api_call]) > 0:
         return True
     else:
         return False
 
 
-def fetch_response(apiCall):
-    return world.responses[apiCall]
+def fetch_response(api_call):
+    return world.responses[api_call]
 
 
-def place_response(apiCall,node,response):
-    world.responses[apiCall][node] = response
+def place_response(api_call, node, response):
+    world.responses[api_call][node] = response
 
 
 def fetch_config(key):
     return world.config[key]
 
 
-def check_neighbors(step,node):
-    steps = import_steps()
+def check_neighbors(step, node):
     api = prepare_api_call(node)
     response = api.getNeighbors()
-    logger.info('Response: %s',response)
-    containsNeighbor = [False,False]
-    
+    logger.info('Response: %s', response)
+    contains_neighbor = [False, False]
+
     for i in response:
-        expectedNeighbors = step.hashes
+        expected_neighbors = step.hashes
         if type(response[i]) != int:
             for x in range(len(response[i])):    
-                if expectedNeighbors[0]['neighbors'] == response[i][x]['address']:
-                    containsNeighbor[0] = True  
-                if expectedNeighbors[1]['neighbors'] == response[i][x]['address']:
-                    containsNeighbor[1] = True  
+                if expected_neighbors[0]['neighbors'] == response[i][x]['address']:
+                    contains_neighbor[0] = True
+                if expected_neighbors[1]['neighbors'] == response[i][x]['address']:
+                    contains_neighbor[1] = True
     
-    return containsNeighbor
+    return contains_neighbor
+
 
 def import_steps():
     import tests.features.steps.api_test_steps as steps
     return steps
 
 
-def prepare_options(args,optionList):
+def prepare_options(args, option_list):
     """
     Prepares key dictionary for comparison with response values. The argument and type are contained in
     a gherkin table, stored beneath the step definition in the associated feature file. This function
     converts the argument values to the appropriate format.
 
     :param args: The gherkin table arguments from the feature file
-    :param optionList: The list dictionary that the arguments will be placed into
+    :param option_list: The list dictionary that the arguments will be placed into
     """
     for x in range(len(args)):
         if len(args) != 0:
@@ -93,9 +92,9 @@ def prepare_options(args,optionList):
                 address = "udp://" + host + ":" + str(port)
                 value = [address.decode()]
             elif arg_type == "staticValue":
-                value = getattr(static_vals,value)
+                value = getattr(static_vals, value)
             elif arg_type == "staticList":
-                address = getattr(static_vals,value)
+                address = getattr(static_vals, value)
                 value = [address]
             elif arg_type == "bool":
                 if value == "False":
@@ -111,23 +110,24 @@ def prepare_options(args,optionList):
                 response = fetch_response(value)
                 value = [response[config]]
 
-            optionList[key] = value
+            option_list[key] = value
 
-def fetch_call(apiCall,api,options):
+
+def fetch_call(api_call, api, options):
     """
     Fetch the provided API call target using the provided arguments and return the response.
 
-    :param apiCall: The API call you would like to fetch
+    :param api_call: The API call you would like to fetch
     :param api: A provided node api target for making the call
     :param options: The arguments needed for the API call
     :return: Response for API Call
     """
 
-    callList = {
+    call_list = {
         'getNodeInfo': api.get_node_info,
         'getNeighbors': api.get_neighbors,
         'getTips': api.get_tips,
-        'getTrytes':api.get_trytes,
+        'getTrytes': api.get_trytes,
         'getTransactionsToApprove': api.get_transactions_to_approve,
         'getBalances': api.get_balances,
         'addNeighbors': api.add_neighbors,
@@ -142,12 +142,12 @@ def fetch_call(apiCall,api,options):
         'interruptAttachingToTangle': api.interrupt_attaching_to_tangle,
     }
 
-    response = callList[apiCall](**options)
+    response = call_list[api_call](**options)
 
     return response
 
 
-def assign_nodes(node,node_list):
+def assign_nodes(node, node_list):
     """
     This method determines if the node specified is equal to "all nodes". If it is,
     it stores all available nodes in the node list. If not, it stores only the
@@ -169,25 +169,25 @@ def assign_nodes(node,node_list):
         world.config['nodeId'] = node
 
 
-def make_api_call(api,options,q):
+def make_api_call(api, options, q):
     responses = q.get()
     config = q.get()
 
-    apiCall = config['apiCall']
+    api_call = config['api']
     node = config['nodeId']
 
-    response = fetch_call(apiCall, api, options)
-    responses[apiCall] = {}
-    responses[apiCall][node] = response
+    response = fetch_call(api_call, api, options)
+    responses[api_call] = {}
+    responses[api_call][node] = response
     return response
 
 
 def check_if_empty(value):
     if len(value) == 0:
-        isEmpty = True
+        is_empty = True
     else:
-        isEmpty = False
-    return isEmpty
+        is_empty = False
+    return is_empty
 
 
 def prepare_transaction_arguments(arg_list):
