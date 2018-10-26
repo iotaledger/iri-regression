@@ -100,8 +100,8 @@ def compare_response(step):
     """
     logger.info('Validating response')
     keys = step.hashes
-    node_id = world.config['node_id']
-    api_call = world.config['api_call']
+    node_id = world.config['nodeId']
+    api_call = world.config['apiCall']
 
     response = world.responses[api_call][node_id]
     key_list = []

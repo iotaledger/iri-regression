@@ -7,16 +7,16 @@ from yaml import load, Loader
 def configuration(feature):
     machine = []   
          
-    yamlPath = './output.yml'
-    stream = open(yamlPath,'r')
-    yamlFile = load(stream,Loader=Loader)
-    world.seeds = yamlFile.get('seeds')
+    yaml_path = './output.yml'
+    stream = open(yaml_path,'r')
+    yaml_file = load(stream,Loader=Loader)
+    world.seeds = yaml_file.get('seeds')
     
     nodes = {}
-    keys = yamlFile.keys()  
+    keys = yaml_file.keys()
     for key in keys:
         if key != 'seeds' and key != 'defaults':
-            nodes[key] = yamlFile[key]
+            nodes[key] = yaml_file[key]
 
         machine = nodes
           
