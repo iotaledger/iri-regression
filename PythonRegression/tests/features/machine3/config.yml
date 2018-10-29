@@ -1,6 +1,6 @@
 defaults: &db_1
   db: https://s3.eu-central-1.amazonaws.com/iotaledger-dbfiles/dev/Blowball_Tests_db.tar
-  db_checksum: 31f98688cab6a34c7a5653ae96eb56076beb8327ec83ecc5b5185af1cc031637
+  db_checksum: 0e9017ee8e6bef601dd68f08200d4ff2290701d0e903da518097620fa8adb092
   iri_args: ['--testnet-coordinator',
   'EFPNKGPCBXXXLIBYFGIGYBYTFFPIOQVNNVVWTTIYZO9NFREQGVGDQQHUUQ9CLWAEMXVDFSSMOTGAHVIBH',
   '--milestone-keys',
@@ -33,3 +33,4 @@ nodes:
 
   nodeF:
     <<: *db_1
+
