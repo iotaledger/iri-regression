@@ -12,7 +12,7 @@ Feature: Test GTTA for blowballs
 
 		And "findTransactions" is called on "nodeA" with:
 		|keys           |values                 |type           |
-        |addresses      |TEST_BLOWBALL_COO      |staticList     |
+		|addresses      |TEST_BLOWBALL_COO      |staticList     |
 
 		#Insert your testnet coordinator address above
 		Then the returned GTTA transactions will be compared with the milestones

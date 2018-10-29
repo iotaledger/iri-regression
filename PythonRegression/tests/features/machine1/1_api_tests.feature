@@ -52,7 +52,7 @@ Feature: Test API calls on Machine 1
 		|keys						|
 		|address					|
 		|numberOfAllTransactions			|
-		|numberOfRandomTransactionRequests			|
+		|numberOfRandomTransactionRequests		|
 		|numberOfNewTransactions			|
 		|numberOfInvalidTransactions			|
 		|numberOfSentTransactions			|
